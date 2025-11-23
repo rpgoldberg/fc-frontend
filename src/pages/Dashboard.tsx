@@ -15,6 +15,7 @@ import {
   Divider,
   Grid,
   GridItem,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { FaCube, FaPlus, FaSearch, FaChartBar, FaBoxOpen } from 'react-icons/fa';
 import { useQuery } from 'react-query';
@@ -25,7 +26,8 @@ import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  
+  const cardBg = useColorModeValue('white', 'gray.800');
+
   const { data: figuresData } = useQuery('recentFigures', () => getFigures(1, 4)) || {};
   const { data: statsData } = useQuery('dashboardStats', getFigureStats) || {};
   
@@ -36,14 +38,14 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Heading size="lg" mb={6}>Dashboard</Heading>
-      
+
       <Box mb={8}>
         <SearchBar onSearch={handleSearch} placeholder="Search your entire collection..." />
       </Box>
       
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={5} mb={8}>
         <Stat
-          bg="white"
+          bg={cardBg}
           p={5}
           shadow="sm"
           borderRadius="lg"
@@ -59,7 +61,7 @@ const Dashboard: React.FC = () => {
         </Stat>
         
         <Stat
-          bg="white"
+          bg={cardBg}
           p={5}
           shadow="sm"
           borderRadius="lg"
@@ -75,7 +77,7 @@ const Dashboard: React.FC = () => {
         </Stat>
         
         <Stat
-          bg="white"
+          bg={cardBg}
           p={5}
           shadow="sm"
           borderRadius="lg"
@@ -91,7 +93,7 @@ const Dashboard: React.FC = () => {
         </Stat>
         
         <Stat
-          bg="white"
+          bg={cardBg}
           p={5}
           shadow="sm"
           borderRadius="lg"
@@ -109,7 +111,7 @@ const Dashboard: React.FC = () => {
       
       <Grid templateColumns={{ base: '1fr', lg: '2fr 1fr' }} gap={6}>
         <GridItem>
-          <Box bg="white" p={5} shadow="sm" borderRadius="lg">
+          <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
             <Flex justify="space-between" align="center" mb={4}>
               <Heading size="md">Recent Figures</Heading>
               <Button 
@@ -148,7 +150,7 @@ const Dashboard: React.FC = () => {
         </GridItem>
         
         <GridItem>
-          <Box bg="white" p={5} shadow="sm" borderRadius="lg" height="100%">
+          <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg" height="100%">
             <Heading size="md" mb={4}>Top Manufacturers</Heading>
             <Divider mb={4} />
             

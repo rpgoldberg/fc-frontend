@@ -22,12 +22,91 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
+  Tooltip,
+  useToast,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon, ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaLock, FaUnlock } from 'react-icons/fa';
 import { useAuthStore } from '../stores/authStore';
 import { useQueryClient } from 'react-query';
 import ThemeToggle from './ThemeToggle';
+import { clearMfcCookies, hasMfcCookies, getStorageType } from '../utils/crypto';
+
+const CookieStatusIndicator: React.FC = () => {
+  const [cookiesStored, setCookiesStored] = React.useState(hasMfcCookies());
+  const [storageType, setStorageType] = React.useState(getStorageType());
+  const toast = useToast();
+  const navigate = useNavigate();
+  const iconColor = useColorModeValue(
+    cookiesStored ? 'green.500' : 'gray.400',
+    cookiesStored ? 'green.400' : 'gray.500'
+  );
+  const statusTextColor = useColorModeValue('gray.600', 'gray.300');
+
+  // Refresh status when cookies might have changed
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCookiesStored(hasMfcCookies());
+      setStorageType(getStorageType());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleClearCookies = () => {
+    clearMfcCookies();
+    setCookiesStored(false);
+    setStorageType(null);
+    toast({
+      title: 'MFC Cookies Cleared',
+      description: 'Your MyFigureCollection cookies have been removed.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  const getTooltipLabel = () => {
+    if (!cookiesStored) return 'MFC Cookies: None stored';
+    if (storageType === 'one-time') return 'MFC Cookies: One-time (form session)';
+    if (storageType === 'session') return 'MFC Cookies: Session (until logout)';
+    if (storageType === 'persistent') return 'MFC Cookies: Persistent (encrypted)';
+    return 'MFC Cookies: Unknown';
+  };
+
+  return (
+    <Menu>
+      <Tooltip label={getTooltipLabel()} placement="bottom">
+        <MenuButton
+          as={IconButton}
+          icon={<Icon as={cookiesStored ? FaLock : FaUnlock} w="16px" h="16px" />}
+          variant="ghost"
+          size="sm"
+          color={iconColor}
+          aria-label="MFC Cookie Status"
+          data-testid="cookie-status-button"
+          minW="32px"
+        />
+      </Tooltip>
+      <MenuList>
+        <Box px={4} py={2}>
+          <Text fontWeight="semibold" fontSize="sm">MFC Cookie Status</Text>
+          <Text fontSize="xs" color={statusTextColor}>
+            {cookiesStored ? `Active (${storageType})` : 'No cookies stored'}
+          </Text>
+        </Box>
+        <MenuDivider />
+        {cookiesStored && (
+          <MenuItem onClick={handleClearCookies} color="red.500">
+            Clear Cookies
+          </MenuItem>
+        )}
+        <MenuItem onClick={() => navigate('/profile')}>
+          Manage in Profile
+        </MenuItem>
+      </MenuList>
+    </Menu>
+  );
+};
 
 const Navbar: React.FC = () => {
   const { isOpen, onToggle } = useDisclosure();
@@ -114,6 +193,7 @@ const Navbar: React.FC = () => {
           align={'center'}
         >
           <ThemeToggle />
+          {user && <CookieStatusIndicator />}
           {user ? (
             <Menu>
               <MenuButton

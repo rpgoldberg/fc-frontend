@@ -20,12 +20,13 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-} from '@chakra-ui/react';
+useColorModeValue, } from '@chakra-ui/react';
 import { FaEdit, FaTrash, FaArrowLeft, FaExternalLinkAlt } from 'react-icons/fa';
 // import { ChevronRightIcon } from '@chakra-ui/icons'; // Temporarily disabled
 import { getFigureById, deleteFigure } from '../api';
 
 const FigureDetail: React.FC = () => {
+  const cardBg = useColorModeValue('white', 'gray.800');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -116,7 +117,7 @@ const FigureDetail: React.FC = () => {
         </BreadcrumbItem>
       </Breadcrumb>
       
-      <Box bg="white" borderRadius="lg" overflow="hidden" shadow="md">
+      <Box bg={cardBg} borderRadius="lg" overflow="hidden" shadow="md">
         <Grid templateColumns={{ base: '1fr', md: '1fr 2fr' }}>
           <GridItem>
             <Image

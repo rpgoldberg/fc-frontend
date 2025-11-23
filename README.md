@@ -10,8 +10,96 @@ React frontend for the Figure Collector application. Provides a user interface f
 - Figure management interface (add, edit, delete)
 - Search and filter functionality
 - Statistical dashboard
-- Version display with service status and validation
-- Self-registration with backend service for version tracking
+- Version display with service health status
+- Real-time service health monitoring
+- **MFC Cookie Authentication** - Secure storage for accessing NSFW and private content
+- **Terminal Retro Theme** - DOS/Osbourne-inspired green/orange theme with Matrix easter egg
+
+## Terminal Retro Theme
+
+Experience nostalgia with the Terminal theme - a retro DOS/Osbourne/Amiga-inspired interface featuring:
+
+- **Matrix Green & Amber Colors**: Classic terminal palette with #00ff00 green and #ff8800 orange
+- **Monospace Font**: Authentic Courier New typeface throughout
+- **Triple Theme Toggle**: Cycle through Light → Dark → Terminal modes
+- **Easter Egg**: "The Matrix has you, Neo..." tooltip when in Terminal mode
+
+### How to Enable
+
+1. Click the theme toggle in the navbar (sun/moon/terminal icon)
+2. Cycle through: Light → Dark → **Terminal**
+3. Terminal theme persists across sessions via localStorage
+
+### Theme Persistence
+
+Your theme preference is automatically saved and restored on subsequent visits. The Terminal theme uses Chakra UI's dark mode as a base with custom CSS overrides for the retro aesthetic.
+
+## MFC Cookie Authentication
+
+The frontend supports optional MyFigureCollection (MFC) cookie authentication for accessing NSFW and private content during figure scraping. This feature provides a secure, user-friendly way to authenticate with MFC without storing credentials.
+
+### Features
+
+- **Multiple Storage Options**:
+  - **One-time (Form Session)**: Cookies stored in memory, cleared when form closes
+  - **Session (Until Logout)**: Cookies in sessionStorage, cleared on logout
+  - **Persistent (Encrypted)**: AES-GCM encrypted storage in localStorage
+
+- **Security & Privacy**:
+  - Client-side only - cookies never sent to backend
+  - AES-GCM 256-bit encryption for persistent storage
+  - PBKDF2 key derivation with 100,000 iterations
+  - Automatic cleanup on session expiry
+
+- **User-Friendly Features**:
+  - Interactive bookmarklet for easy cookie extraction
+  - Collapsible help with step-by-step DevTools instructions
+  - Status indicator in navbar showing storage type
+  - Profile page dashboard for cookie management
+  - "Save & Add Another" button for bulk figure entry
+
+### How to Use
+
+1. **Add Cookies** (when adding/editing a figure):
+   - Click "How to get MFC cookies" for detailed instructions
+   - Use provided bookmarklet for easy extraction
+   - Or manually copy from browser DevTools
+   - Select desired storage option
+   - Cookies auto-save when storage type is selected
+
+2. **Manage Cookies** (Profile page):
+   - View current cookie status and storage type
+   - Clear cookies manually at any time
+   - Access via navbar cookie indicator (🔒)
+
+3. **Automatic Cleanup**:
+   - One-time cookies cleared when form closes
+   - Session cookies cleared on logout
+   - Persistent cookies cleared on session expiry
+
+### Storage Types Explained
+
+| Type | Storage Location | Encryption | Cleared When | Best For |
+|------|------------------|------------|--------------|----------|
+| **None** | Not stored | N/A | N/A | Public content only |
+| **One-time** | Memory only | No (temporary) | Form close | Single figure entry |
+| **Session** | sessionStorage | No (temporary) | Logout | Active browsing session |
+| **Persistent** | localStorage | Yes (AES-GCM) | Session expiry | Frequent use |
+
+### Security Notes
+
+- ⚠️ **Never share your MFC cookies** - they provide full access to your MFC account
+- Cookies are **client-side only** and never transmitted to the backend
+- Persistent cookies use **military-grade encryption** (AES-GCM 256-bit)
+- All cookies are automatically cleared when your session expires
+
+### Technical Implementation
+
+- **Encryption**: `src/utils/crypto.ts` - Web Crypto API with AES-GCM
+- **UI Components**: `src/components/FigureForm.tsx` - Cookie management section
+- **Profile Dashboard**: `src/pages/Profile.tsx` - Cookie status and controls
+- **Navbar Indicator**: `src/components/Navbar.tsx` - CookieStatusIndicator
+- **Auto-cleanup**: `src/stores/authStore.ts` - Logout hook
 
 ## Technology Stack
 
@@ -24,13 +112,53 @@ React frontend for the Figure Collector application. Provides a user interface f
 - Nginx (for static serving and API proxying)
 - **Testing**: React Testing Library + Jest + jest-axe
 
+## Proxy Requirement
+
+**⚠️ IMPORTANT: This application REQUIRES a proxy to function correctly.**
+
+The frontend makes all API requests to relative paths (e.g., `/api/version`, `/api/figures`) which must be proxied to the backend service. This design:
+- **Avoids CORS issues** by keeping frontend and API on the same origin
+- **Simplifies deployment** with a single domain for users
+- **Enhances security** by not exposing the backend directly
+
+### Development (Automatic)
+The React dev server (`npm start`) automatically proxies `/api/*` requests to the backend using `src/setupProxy.js`. No configuration needed - it just works!
+
+### Production (Nginx Required)
+Nginx must be configured to:
+- Serve the frontend static files
+- Proxy `/api/*` requests to the backend service
+- Example configuration available in `../figure-collector-infra/nginx/`
+
+### Direct Backend Access
+**Not supported.** The frontend assumes a proxy and uses relative URLs. Accessing the backend directly (e.g., `http://backend:5000`) bypasses the frontend entirely.
+
+### Environment Setup
+
+**Configuration Files:**
+- `.env.example` - Template showing all environment variables
+- `.env.local` - Your local overrides (gitignored, optional)
+- `.env` - Auto-created by Create React App (gitignored)
+
+**Quick Start:**
+```bash
+# Copy example (optional - defaults work for most cases)
+cp .env.example .env.local
+
+# Frontend typically works with defaults - no setup required!
+```
+
+See `.env.example` for all configuration options including:
+- API URL configuration (local vs Docker vs Coolify)
+- Debug logging settings for development
+
 ### Local Development
 
 ```bash
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (with backend proxy)
 npm start
 
 # Build for production
@@ -48,32 +176,38 @@ npm test:ci
 
 ### Environment Variables
 
-```bash
-# Required for API communication
-REACT_APP_API_URL=/api
+See `.env.example` for complete configuration template.
 
-# Optional for development
-REACT_APP_BACKEND_URL=http://localhost:5070
-```
+**API Configuration:**
+- `REACT_APP_API_URL`: API endpoint URL (default: `/api`)
+  - Local dev with proxy: `/api` (recommended)
+  - Docker/Coolify: `/api`
+  - Direct backend: `http://localhost:5000/api` (not typical)
+
+**Optional:**
+- `REACT_APP_BACKEND_URL`: Direct backend URL (debugging only, not typically needed)
+- `REACT_APP_DEBUG`: Enable debug logging in browser console (default: false)
+- `REACT_APP_DEBUG_LEVEL`: Debug verbosity (`info`, `verbose`, `debug`)
+- `REACT_APP_DEBUG_MODULES`: Comma-separated modules to debug (e.g., `auth,api`)
 
 ### Development Proxy
 
 The frontend uses `src/setupProxy.js` to proxy API requests during development:
 
 - **Path Rewriting**: Requests to `/api/*` are rewritten to `/*` when forwarded to the backend
-- **Target**: `http://backend:5070` (Docker network) or `http://localhost:5070` (local)
-- **Additional Routes**: `/register-frontend` and `/version` are also proxied
+- **Target**: `http://backend:5070` (Docker network)
+- **Additional Routes**: `/version` is also proxied for service health information
 
 This mirrors the production nginx configuration, ensuring consistent behavior between development and production environments.
 
 **Requirements**:
 - `http-proxy-middleware` package (included in dependencies)
-- Backend service must be running on port 5070 (dev) or 5050 (prod)
+- Backend service must be running on port 5000 (local) or 5070 (Docker dev)
 
 **Verify proxy is working**:
 ```bash
 # In Docker dev environment
-docker logs figure-collector-frontend-dev | grep HPM
+docker logs fc-frontend-dev | grep HPM
 # Should show: [HPM] Proxy created and [HPM] Proxy rewrite rule created
 ```
 

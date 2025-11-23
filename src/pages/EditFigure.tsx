@@ -14,7 +14,7 @@ import {
   Center,
   Alert,
   AlertIcon,
-} from '@chakra-ui/react';
+useColorModeValue, } from '@chakra-ui/react';
 import { ChevronRightIcon } from '@chakra-ui/icons';
 import { FaArrowLeft } from 'react-icons/fa';
 import { getFigureById, updateFigure } from '../api';
@@ -22,6 +22,7 @@ import FigureForm from '../components/FigureForm';
 import { FigureFormData } from '../types';
 
 const EditFigure: React.FC = () => {
+  const cardBg = useColorModeValue('white', 'gray.800');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -130,7 +131,7 @@ const EditFigure: React.FC = () => {
         </Button>
       </Flex>
       
-      <Box bg="white" p={6} borderRadius="lg" shadow="md">
+      <Box bg={cardBg} p={6} borderRadius="lg" shadow="md">
         <FigureForm
           initialData={figure}
           onSubmit={handleSubmit}

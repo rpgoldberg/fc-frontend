@@ -1,25 +1,43 @@
 import React from 'react';
-import { IconButton, Tooltip, useColorMode } from '@chakra-ui/react';
+import { IconButton, Tooltip, Icon, ButtonGroup } from '@chakra-ui/react';
 import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { FaTerminal } from 'react-icons/fa';
+import { useCustomTheme } from '../hooks/useCustomTheme';
 
 const ThemeToggle: React.FC = () => {
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { customTheme, setCustomTheme } = useCustomTheme();
 
   return (
-    <Tooltip
-      label={`Switch to ${colorMode === 'light' ? 'dark' : 'light'} mode`}
-      placement="bottom"
-      hasArrow
-    >
-      <IconButton
-        aria-label="Toggle color mode"
-        icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-        onClick={toggleColorMode}
-        variant="ghost"
-        size="md"
-        type="button"
-      />
-    </Tooltip>
+    <ButtonGroup isAttached size="sm" variant="outline">
+      <Tooltip label="Light mode" placement="bottom">
+        <IconButton
+          aria-label="Light mode"
+          icon={<SunIcon />}
+          onClick={() => setCustomTheme('light')}
+          colorScheme={customTheme === 'light' ? 'blue' : 'gray'}
+          variant={customTheme === 'light' ? 'solid' : 'ghost'}
+        />
+      </Tooltip>
+      <Tooltip label="Dark mode" placement="bottom">
+        <IconButton
+          aria-label="Dark mode"
+          icon={<MoonIcon />}
+          onClick={() => setCustomTheme('dark')}
+          colorScheme={customTheme === 'dark' ? 'blue' : 'gray'}
+          variant={customTheme === 'dark' ? 'solid' : 'ghost'}
+        />
+      </Tooltip>
+      <Tooltip label="Terminal mode" placement="bottom">
+        <IconButton
+          aria-label="Terminal mode"
+          icon={<Icon as={FaTerminal} />}
+          onClick={() => setCustomTheme('terminal')}
+          colorScheme={customTheme === 'terminal' ? 'green' : 'gray'}
+          variant={customTheme === 'terminal' ? 'solid' : 'ghost'}
+          color={customTheme === 'terminal' ? '#00ff00' : undefined}
+        />
+      </Tooltip>
+    </ButtonGroup>
   );
 };
 

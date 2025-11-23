@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '../types';
+import { clearSessionCookies } from '../utils/crypto';
 
 interface AuthState {
   user: User | null;
@@ -15,7 +16,11 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      logout: () => {
+        // Clear session cookies on logout (preserves persistent cookies)
+        clearSessionCookies();
+        set({ user: null, isAuthenticated: false });
+      },
     }),
     {
       name: 'auth-storage',

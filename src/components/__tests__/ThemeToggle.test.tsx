@@ -17,56 +17,66 @@ describe('ThemeToggle', () => {
     jest.clearAllMocks();
   });
 
-  it('should render a button with accessible label', () => {
+  it('should render three theme buttons', () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const button = screen.getByRole('button', { name: /toggle color mode/i });
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveAttribute('aria-label', 'Toggle color mode');
+    expect(screen.getByRole('button', { name: /light mode/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dark mode/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /terminal mode/i })).toBeInTheDocument();
   });
 
-  it('should display moon icon in light mode', () => {
+  it('should have accessible labels on all buttons', () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const button = screen.getByRole('button', { name: /toggle color mode/i });
-    // Moon icon should be present (we check by aria-label)
-    expect(button).toBeInTheDocument();
+    const lightButton = screen.getByRole('button', { name: /light mode/i });
+    const darkButton = screen.getByRole('button', { name: /dark mode/i });
+    const terminalButton = screen.getByRole('button', { name: /terminal mode/i });
+
+    expect(lightButton).toHaveAttribute('aria-label', 'Light mode');
+    expect(darkButton).toHaveAttribute('aria-label', 'Dark mode');
+    expect(terminalButton).toHaveAttribute('aria-label', 'Terminal mode');
   });
 
-  it('should toggle color mode when clicked', () => {
-    const { rerender } = render(
+  it('should switch to dark mode when dark button is clicked', () => {
+    render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const button = screen.getByRole('button', { name: /toggle color mode/i });
+    const darkButton = screen.getByRole('button', { name: /dark mode/i });
 
     act(() => {
-      fireEvent.click(button);
+      fireEvent.click(darkButton);
     });
 
-    // After clicking, the component should have toggled
-    expect(button).toBeInTheDocument();
+    // After clicking, the component should still be rendered
+    expect(darkButton).toBeInTheDocument();
   });
 
-  it('should have tooltip on hover', () => {
+  it('should switch to terminal mode when terminal button is clicked', () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const button = screen.getByRole('button', { name: /toggle color mode/i });
-    expect(button).toBeInTheDocument();
+    const terminalButton = screen.getByRole('button', { name: /terminal mode/i });
+
+    act(() => {
+      fireEvent.click(terminalButton);
+    });
+
+    // After clicking, the component should still be rendered
+    expect(terminalButton).toBeInTheDocument();
   });
 
   it('should be keyboard accessible', () => {
@@ -76,41 +86,46 @@ describe('ThemeToggle', () => {
       </ThemeWrapper>
     );
 
-    const button = screen.getByRole('button', { name: /toggle color mode/i });
-    expect(button).not.toHaveAttribute('disabled');
+    const lightButton = screen.getByRole('button', { name: /light mode/i });
+    const darkButton = screen.getByRole('button', { name: /dark mode/i });
+    const terminalButton = screen.getByRole('button', { name: /terminal mode/i });
 
-    // Should be tabbable
-    expect(button).toHaveAttribute('type', 'button');
+    // All buttons should have type="button"
+    expect(lightButton).toHaveAttribute('type', 'button');
+    expect(darkButton).toHaveAttribute('type', 'button');
+    expect(terminalButton).toHaveAttribute('type', 'button');
   });
 
-  it('should save preference to localStorage when toggled', () => {
+  it('should save preference to localStorage when theme is changed', () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const button = screen.getByRole('button', { name: /toggle color mode/i });
+    const darkButton = screen.getByRole('button', { name: /dark mode/i });
 
     act(() => {
-      fireEvent.click(button);
+      fireEvent.click(darkButton);
     });
 
-    // localStorage should have been called by Chakra UI
+    // localStorage should have been called
     expect(localStorage.setItem).toHaveBeenCalled();
   });
 
   describe('accessibility', () => {
-    it('should have proper ARIA attributes', () => {
+    it('should have proper ARIA attributes on all buttons', () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
         </ThemeWrapper>
       );
 
-      const button = screen.getByRole('button', { name: /toggle color mode/i });
-      expect(button).toHaveAttribute('aria-label');
-      expect(button).toHaveAttribute('type', 'button');
+      const buttons = screen.getAllByRole('button');
+      buttons.forEach((button) => {
+        expect(button).toHaveAttribute('aria-label');
+        expect(button).toHaveAttribute('type', 'button');
+      });
     });
 
     it('should be focusable', () => {
@@ -120,9 +135,9 @@ describe('ThemeToggle', () => {
         </ThemeWrapper>
       );
 
-      const button = screen.getByRole('button', { name: /toggle color mode/i });
-      button.focus();
-      expect(button).toHaveFocus();
+      const lightButton = screen.getByRole('button', { name: /light mode/i });
+      lightButton.focus();
+      expect(lightButton).toHaveFocus();
     });
   });
 });

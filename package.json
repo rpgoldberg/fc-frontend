@@ -1,5 +1,5 @@
 {
-  "name": "figure-collector-frontend",
+  "name": "fc-frontend",
   "version": "2.1.0",
   "private": true,
 
@@ -38,7 +38,11 @@
   "jest": {
     "moduleNameMapper": {
       "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs"
-    }
+    },
+    "testMatch": [
+      "<rootDir>/src/**/*.test.{ts,tsx}",
+      "<rootDir>/src/**/*.spec.{ts,tsx}"
+    ]
   },
   "browserslist": {
     "production": [
