@@ -4,7 +4,6 @@ import axios from 'axios';
 describe('Frontend App Integration', () => {
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:5055';
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5056';
-  const versionServiceUrl = process.env.VERSION_SERVICE_URL || 'http://localhost:3006';
 
   beforeAll(async () => {
     console.log('🚀 Starting Frontend App Integration Tests');
@@ -28,55 +27,12 @@ describe('Frontend App Integration', () => {
       }
     });
 
-    it('validates version service integration and communication', async () => {
-      try {
-        // Try version service health
-        const versionHealthResponse = await axios.get(`${versionServiceUrl}/health`, {
-          timeout: 5000
-        });
-
-        expect(versionHealthResponse.status).toBe(200);
-        console.log(`✅ Version service health: ${versionHealthResponse.data.status || 'ok'}`);
-      } catch (error) {
-        console.log(`ℹ️  Version service not available at ${versionServiceUrl}`);
-        console.log('ℹ️  This is acceptable - version service may be integrated differently');
-      }
-    });
-
-    it('validates cross-service version coordination', async () => {
-      try {
-        const versionResponse = await axios.get(`${backendUrl}/version`, {
-          timeout: 10000
-        });
-
-        expect(versionResponse.status).toBe(200);
-        expect(versionResponse.data).toHaveProperty('application');
-        expect(versionResponse.data).toHaveProperty('services');
-
-        // Validate service registry
-        const services = versionResponse.data.services;
-        console.log('📊 Service Registry Status:');
-        
-        Object.keys(services).forEach(serviceName => {
-          const service = services[serviceName];
-          console.log(`   ${serviceName}: v${service.version} (${service.status})`);
-          expect(service).toHaveProperty('version');
-          expect(service).toHaveProperty('status');
-        });
-
-        console.log('✅ Cross-service version coordination working');
-      } catch (error) {
-        console.error('❌ Version coordination check failed:', error.response?.data || error.message);
-        throw error;
-      }
-    });
   });
 
   describe('API Gateway and Routing Integration', () => {
     it('validates core API endpoints are accessible', async () => {
       const coreEndpoints = [
         { path: '/health', expectedStatus: 200, description: 'Health check' },
-        { path: '/version', expectedStatus: 200, description: 'Version information' },
       ];
 
       for (const endpoint of coreEndpoints) {

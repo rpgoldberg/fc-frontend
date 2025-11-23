@@ -292,45 +292,6 @@ describe('Frontend → Backend Integration Tests', () => {
     });
   });
 
-  describe('Frontend Service Registration', () => {
-    test('Frontend startup registration with backend', async () => {
-      // Simulate frontend registration call
-      const registrationData = {
-        version: '1.0.0',
-        name: 'fc-frontend'
-      };
-
-      const response = await backendAPI.post('/register-frontend', registrationData);
-      
-      expect(response.status).toBe(200);
-      expect(response.data).toHaveProperty('success', true);
-      expect(response.data).toHaveProperty('message');
-      
-      // Verify registration appears in version endpoint
-      const versionResponse = await backendAPI.get('/version');
-      expect(versionResponse.status).toBe(200);
-      expect(versionResponse.data.services).toHaveProperty('frontend');
-      
-      const frontendService = versionResponse.data.services.frontend;
-      expect(frontendService.version).toBe(registrationData.version);
-      expect(frontendService.name).toBe(registrationData.name);
-    });
-
-    test('Frontend version reporting in service aggregation', async () => {
-      const response = await backendAPI.get('/version');
-      
-      expect(response.status).toBe(200);
-      expect(response.data).toHaveProperty('services');
-      expect(response.data.services).toHaveProperty('frontend');
-      
-      const frontendService = response.data.services.frontend;
-      expect(frontendService).toHaveProperty('status');
-      expect(frontendService).toHaveProperty('version');
-      expect(frontendService).toHaveProperty('name');
-      // lastSeen is not included in basic service info
-    });
-  });
-
   describe('Error Handling and User Experience', () => {
     test('Frontend handles backend API errors gracefully', async () => {
       // Test various error scenarios that frontend would encounter

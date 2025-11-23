@@ -69,15 +69,14 @@ describe('Frontend Accessibility Integration', () => {
 
         expect(response.status).toBe(200);
         expect(response.data).toBeInstanceOf(Object);
-        
-        // Check for accessible structure
-        expect(response.data).toHaveProperty('application');
+
+        // Check for accessible structure - services with version info
         expect(response.data).toHaveProperty('services');
-        
+        expect(response.data.services).toHaveProperty('backend');
+        expect(response.data.services.backend).toHaveProperty('version');
+
         // Verify readable format
-        if (response.data.application?.version) {
-          expect(typeof response.data.application.version).toBe('string');
-        }
+        expect(typeof response.data.services.backend.version).toBe('string');
 
         console.log('✅ API responses have accessible, structured format');
       } catch (error) {
@@ -207,18 +206,17 @@ describe('Frontend Accessibility Integration', () => {
         });
 
         expect(response.status).toBe(200);
-        
+
         // Verify hierarchical structure suitable for screen readers
-        expect(response.data).toHaveProperty('application');
         expect(response.data).toHaveProperty('services');
-        
-        // Application info should have descriptive fields
-        if (response.data.application) {
-          const app = response.data.application;
-          if (app.version) expect(typeof app.version).toBe('string');
-          if (app.name) expect(typeof app.name).toBe('string');
-          if (app.releaseDate) expect(typeof app.releaseDate).toBe('string');
-        }
+
+        // Services should have descriptive fields
+        const services = response.data.services;
+        Object.keys(services).forEach(serviceName => {
+          const service = services[serviceName];
+          if (service.version) expect(typeof service.version).toBe('string');
+          if (service.status) expect(typeof service.status).toBe('string');
+        });
 
         console.log('✅ API data structure is screen reader friendly');
       } catch (error) {
