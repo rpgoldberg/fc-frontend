@@ -273,7 +273,7 @@ Our frontend testing infrastructure continues to evolve with significant enhance
 #### Recent Test Improvements
 
 - **Comprehensive Coverage Enhancement** (Latest):
-  - Achieved 80%+ coverage on new/modified code for SonarCloud compliance
+  - Achieved 80%+ coverage on new/modified code for quality gate compliance
   - Added 45+ new tests covering critical uncovered lines and conditions
   - Fixed all failing tests in api/index.ts and FigureForm components
   - Enhanced Layout component tests with version management scenarios
