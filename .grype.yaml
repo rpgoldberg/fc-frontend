@@ -1,0 +1,24 @@
+# Grype vulnerability scanning configuration
+# See: https://github.com/anchore/grype#specifying-matches-to-ignore
+
+ignore:
+  # glob 10.4.5 in devDependencies - path traversal vulnerability
+  # This is a development-only dependency (used by babel-plugin-istanbul for code coverage)
+  # Not present in production builds (npm run build creates static assets only)
+  # glob 10.5.0 has a breaking change that breaks test-exclude/babel-plugin-istanbul
+  # Risk: None in production - development tool only
+  - vulnerability: GHSA-7p7w-w7rq-6f7p
+    package:
+      name: glob
+      type: npm
+
+  # webpack-dev-server vulnerabilities (already documented in SECURITY.md as accepted risk)
+  # Development-only, requires specific attack scenario, low likelihood
+  - vulnerability: GHSA-4v9v-hfq4-rm2v
+    package:
+      name: webpack-dev-server
+      type: npm
+  - vulnerability: GHSA-9jgg-88mc-972h
+    package:
+      name: webpack-dev-server
+      type: npm
