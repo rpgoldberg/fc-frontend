@@ -107,7 +107,7 @@ FROM ubuntu:24.04 as production
 
 # Build arguments for OCI labels
 ARG GITHUB_ORG=rpgoldberg
-ARG GITHUB_REPO=figure-collector-frontend
+ARG GITHUB_REPO=fc-frontend
 
 # Add OCI labels
 LABEL org.opencontainers.image.title="Figure Collector Frontend"
@@ -163,7 +163,7 @@ exec nginx -g "daemon off; pid /run/nginx/nginx.pid;"' > /usr/local/bin/start-ng
 USER nginx
 
 # Default environment variables (will be overridden by Docker Compose)
-ENV BACKEND_HOST=figure-collector-backend
+ENV BACKEND_HOST=fc-backend
 ENV BACKEND_PORT=5050
 ENV FRONTEND_PORT=5051
 

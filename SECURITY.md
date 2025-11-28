@@ -119,7 +119,8 @@ These override transitive dependencies to fix security issues in packages we don
 
 - **Dependabot**: Configured with smart grouping to manage dependency updates
 - **Security Alerts**: GitHub security scanning alerts for vulnerable dependencies
-- **SonarCloud**: Additional code quality and security analysis
+- **CodeQL**: Security vulnerability scanning (GitHub native)
+- **Codecov**: Code coverage tracking and visualization
 
 ### Accepted Risk: webpack-dev-server < 5.2.1
 

@@ -28,7 +28,12 @@ describe('Navbar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     Object.defineProperty(window, 'localStorage', {
-      value: { removeItem: jest.fn() },
+      value: {
+        getItem: jest.fn(() => null),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
       writable: true,
     });
   });

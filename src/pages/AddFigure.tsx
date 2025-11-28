@@ -10,7 +10,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-} from '@chakra-ui/react';
+useColorModeValue, } from '@chakra-ui/react';
 import { ChevronRightIcon } from '@chakra-ui/icons';
 import { FaArrowLeft } from 'react-icons/fa';
 import { createFigure } from '../api';
@@ -18,6 +18,7 @@ import FigureForm from '../components/FigureForm';
 import { FigureFormData } from '../types';
 
 const AddFigure: React.FC = () => {
+  const cardBg = useColorModeValue('white', 'gray.800');
   const navigate = useNavigate();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -79,7 +80,7 @@ const AddFigure: React.FC = () => {
         </Button>
       </Flex>
       
-      <Box bg="white" p={6} borderRadius="lg" shadow="md">
+      <Box bg={cardBg} p={6} borderRadius="lg" shadow="md">
         <FigureForm
           onSubmit={handleSubmit}
           isLoading={mutation.isLoading}

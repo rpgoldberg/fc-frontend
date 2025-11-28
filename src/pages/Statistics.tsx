@@ -21,11 +21,12 @@ import {
   Td,
   TableContainer,
   Divider,
-} from '@chakra-ui/react';
+useColorModeValue, } from '@chakra-ui/react';
 import { FaDownload } from 'react-icons/fa';
 import { getFigureStats } from '../api';
 
 const Statistics: React.FC = () => {
+  const cardBg = useColorModeValue('white', 'gray.800');
   const { data: stats, isLoading, error } = useQuery('figureStats', getFigureStats) || { data: null, isLoading: false, error: null };
 
   const downloadCsv = () => {
@@ -89,7 +90,7 @@ const Statistics: React.FC = () => {
       
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={10}>
         <Stat
-          bg="white"
+          bg={cardBg}
           p={6}
           shadow="sm"
           borderRadius="lg"
@@ -103,7 +104,7 @@ const Statistics: React.FC = () => {
         </Stat>
         
         <Stat
-          bg="white"
+          bg={cardBg}
           p={6}
           shadow="sm"
           borderRadius="lg"
@@ -117,7 +118,7 @@ const Statistics: React.FC = () => {
         </Stat>
         
         <Stat
-          bg="white"
+          bg={cardBg}
           p={6}
           shadow="sm"
           borderRadius="lg"
@@ -132,7 +133,7 @@ const Statistics: React.FC = () => {
       </SimpleGrid>
       
       <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={8}>
-        <Box bg="white" p={5} shadow="sm" borderRadius="lg">
+        <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
           <Heading size="md" mb={4}>Manufacturers</Heading>
           <Divider mb={4} />
           
@@ -160,7 +161,7 @@ const Statistics: React.FC = () => {
           </TableContainer>
         </Box>
         
-        <Box bg="white" p={5} shadow="sm" borderRadius="lg">
+        <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
           <Heading size="md" mb={4}>Scales</Heading>
           <Divider mb={4} />
           
@@ -188,7 +189,7 @@ const Statistics: React.FC = () => {
           </TableContainer>
         </Box>
         
-        <Box bg="white" p={5} shadow="sm" borderRadius="lg">
+        <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
           <Heading size="md" mb={4}>Storage Locations</Heading>
           <Divider mb={4} />
           

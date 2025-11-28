@@ -1,6 +1,6 @@
 {
-  "name": "figure-collector-frontend",
-  "version": "2.0.2",
+  "name": "fc-frontend",
+  "version": "2.1.1",
   "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
@@ -22,10 +22,15 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --coverage --watchAll=false --verbose --detectOpenHandles",
+    "lint": "echo 'Using eslint via react-scripts'",
+    "test": "react-scripts test --coverage --watchAll=false --verbose --testPathIgnorePatterns='cross-service'",
+    "test:unit": "react-scripts test --watchAll=false --verbose --testPathIgnorePatterns='cross-service|integration'",
+    "test:integration": "react-scripts test --watchAll=false --verbose --testPathPattern='integration' --testPathIgnorePatterns='cross-service'",
+    "test:e2e": "react-scripts test --watchAll=false --verbose --testPathPattern='cross-service'",
     "test:watch": "react-scripts test",
-    "test:ci": "CI=true react-scripts test --coverage --maxWorkers=2 --reporters=default --reporters=jest-junit",
-    "test:a11y": "react-scripts test --testNamePattern='accessibility'",
+    "test:coverage": "react-scripts test --coverage --watchAll=false --testPathIgnorePatterns='cross-service'",
+    "test:ci": "CI=true react-scripts test --coverage --watchAll=false --maxWorkers=2 --testPathIgnorePatterns='cross-service'",
+    "test:a11y": "react-scripts test --testNamePattern='accessibility' --watchAll=false",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -37,7 +42,11 @@
   "jest": {
     "moduleNameMapper": {
       "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs"
-    }
+    },
+    "testMatch": [
+      "<rootDir>/src/**/*.test.{ts,tsx}",
+      "<rootDir>/src/**/*.spec.{ts,tsx}"
+    ]
   },
   "browserslist": {
     "production": [

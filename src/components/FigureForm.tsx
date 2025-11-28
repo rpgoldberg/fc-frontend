@@ -6,6 +6,7 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Textarea,
   FormErrorMessage,
   VStack,
   Grid,
@@ -18,9 +19,27 @@ import {
   useToast,
   Spinner,
   Image,
+  useColorModeValue,
+  Collapse,
+  Radio,
+  RadioGroup,
+  Stack,
+  Code,
+  HStack,
+  Alert,
+  AlertIcon,
+  Badge,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
-import { FaLink, FaQuestionCircle, FaImage } from 'react-icons/fa';
+import { FaLink, FaQuestionCircle, FaImage, FaChevronDown, FaChevronUp, FaLock, FaTrash } from 'react-icons/fa';
+import {
+  storeMfcCookies,
+  retrieveMfcCookies,
+  clearMfcCookies,
+  getStorageType,
+  hasMfcCookies,
+  type StorageType,
+} from '../utils/crypto';
 import { Figure, FigureFormData } from '../types';
 
 
@@ -35,6 +54,21 @@ const logger = createLogger('FIGURE_FORM');
 const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoading }) => {
   const [isScrapingMFC, setIsScrapingMFC] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  // MFC Cookie storage state
+  const [storageType, setStorageType] = useState<StorageType>(() => {
+    // Check if cookies are already stored and preserve their storage type
+    const existingType = getStorageType();
+    return existingType || 'one-time';
+  });
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
+  const [cookiesStored, setCookiesStored] = useState(hasMfcCookies());
+  const [saveAndAddAnother, setSaveAndAddAnother] = useState(false);
+
+  const previewBorderColor = useColorModeValue('gray.200', 'gray.600');
+  const previewBg = useColorModeValue('gray.50', 'gray.700');
+
   const {
     register,
     handleSubmit,
@@ -49,6 +83,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
       name: '',
       scale: '',
       mfcLink: '',
+      mfcAuth: '',
       location: '',
       boxNumber: '',
       imageUrl: '',
@@ -198,13 +233,17 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
 
     const scrapePromise = (async () => {
       try {
-        const requestBody = { mfcLink: currentMfcLink };
+        const currentMfcAuth = getValues('mfcAuth');
+        const requestBody = {
+          mfcLink: currentMfcLink,
+          ...(currentMfcAuth && { mfcAuth: currentMfcAuth })
+        };
         console.log('[FRONTEND] Making request to /api/figures/scrape-mfc with body:', requestBody);
 
         const response = await fetch('/api/figures/scrape-mfc', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mfcLink: currentMfcLink }),
+          body: JSON.stringify(requestBody),
           signal: controller.signal
         });
 
@@ -355,12 +394,44 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
         name: '',
         scale: '',
         mfcLink: '',
+        mfcAuth: '',
         location: '',
         boxNumber: '',
         imageUrl: '',
       });
     }
   }, [initialData, reset]);
+
+  // Load stored MFC cookies on mount
+  useEffect(() => {
+    const loadStoredCookies = async () => {
+      const storedCookies = await retrieveMfcCookies();
+      if (storedCookies) {
+        setValue('mfcAuth', storedCookies);
+        setCookiesStored(true);
+      } else {
+        setCookiesStored(false);
+      }
+    };
+
+    loadStoredCookies();
+  }, [setValue]);
+
+  // Watch mfcAuth field and save when storage type changes
+  const mfcAuth = watch('mfcAuth');
+  useEffect(() => {
+    const saveCookies = async () => {
+      if (mfcAuth) {
+        await storeMfcCookies(mfcAuth, storageType);
+        setCookiesStored(true);
+      } else {
+        clearMfcCookies();
+        setCookiesStored(false);
+      }
+    };
+
+    saveCookies();
+  }, [mfcAuth, storageType]);
 
   // Cleanup effect for component unmount and pending operations
   useEffect(() => {
@@ -382,11 +453,50 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
       currentScrapeController.current = null;
       debounceTimer.current = null;
       lastScrapePromise.current = null;
+
+      // Clear one-time cookies when component unmounts
+      if (storageType === 'one-time') {
+        clearMfcCookies();
+      }
     };
-  }, []);
+  }, [storageType]);
+
+  // Handle form submission with optional form reset for "Save & Add Another"
+  const handleFormSubmit = async (data: FigureFormData) => {
+    // Submit the data
+    await onSubmit(data);
+
+    // If "Save & Add Another" was clicked and this is Add mode, reset the form
+    if (saveAndAddAnother && !initialData) {
+      // Reset form fields but preserve MFC cookies
+      const currentMfcAuth = getValues('mfcAuth');
+      reset({
+        manufacturer: '',
+        name: '',
+        scale: '',
+        mfcLink: '',
+        mfcAuth: currentMfcAuth, // Preserve MFC auth cookies
+        location: '',
+        boxNumber: '',
+        imageUrl: '',
+      });
+
+      // Show success toast
+      toast({
+        title: 'Figure added!',
+        description: 'Form cleared for next entry.',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+
+      // Reset the flag
+      setSaveAndAddAnother(false);
+    }
+  };
 
   return (
-    <Box as="form" onSubmit={handleSubmit((data) => onSubmit(data))} role="form" aria-labelledby="figure-form-title">
+    <Box as="form" onSubmit={handleSubmit(handleFormSubmit)} role="form" aria-labelledby="figure-form-title">
       <VStack spacing={6} align="stretch">
         <Text id="figure-form-title" fontSize="xl" fontWeight="bold" className="sr-only">
           {initialData ? 'Edit Figure Form' : 'Add Figure Form'}
@@ -429,6 +539,200 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
             Click the link icon to open MFC page, then manually copy data if auto-population fails
           </Text>
         </FormControl>
+
+        {/* MFC Authentication - Comprehensive Cookie Management */}
+        <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('blue.50', 'blue.900')}>
+          <FormControl>
+            <FormLabel>
+              <HStack spacing={2}>
+                <FaLock />
+                <Text>MFC Session Cookies</Text>
+                <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>(Optional - for NSFW/Private content)</Text>
+                {cookiesStored && (
+                  <Badge colorScheme="green" fontSize="xs" ml={2}>
+                    <HStack spacing={1}>
+                      <FaLock size={10} />
+                      <Text>Stored</Text>
+                    </HStack>
+                  </Badge>
+                )}
+              </HStack>
+            </FormLabel>
+
+            <Textarea
+              {...register('mfcAuth')}
+              placeholder="Paste MFC session cookies here from the bookmarklet below"
+              size="sm"
+              rows={3}
+            />
+
+            {/* Collapsible Help Section - Bookmarklet Only */}
+            <Box mt={3}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowHelp(!showHelp)}
+                rightIcon={showHelp ? <FaChevronUp /> : <FaChevronDown />}
+                width="full"
+                justifyContent="space-between"
+              >
+                <HStack>
+                  <FaQuestionCircle />
+                  <Text>How to get MFC cookies</Text>
+                </HStack>
+              </Button>
+              <Collapse in={showHelp} animateOpacity>
+                <Box mt={2} p={3} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="md">
+                  <Text fontSize="sm" fontWeight="medium" mb={2}>Console Method (Quick & Easy)</Text>
+                  <Text fontSize="xs" mb={2} as="ol" pl={5}>
+                    <li>Copy the JavaScript code below</li>
+                  </Text>
+                  <Code fontSize="xs" p={2} display="block" whiteSpace="pre-wrap" mb={2}>
+{/* eslint-disable-next-line no-script-url */}
+{`javascript:(function(){
+    const c={};
+    ['PHPSESSID','sesUID','sesEID','cf_clearance','TBv4_Iden','TBv4_Hash'].forEach(n=>{
+      const v=document.cookie.split(';').find(c=>c.trim().startsWith(n+'='));
+      if(v)c[n]=v.split('=')[1]
+    });
+    const o=JSON.stringify(c,null,2);
+    prompt('✅ MFC Cookies (Ctrl+C to copy):', o);
+  })();`}
+                  </Code>
+                  <Text fontSize="xs" as="ol" start={2} pl={5}>
+                    <li>Open or switch to MFC in another tab and ensure you are logged in</li>
+                    <li>Open Developer Tools (F12 or Ctrl+Shift+I on Windows)</li>
+                    <li>Select the Console tab at the top</li>
+                    <li>Click in the area next to the &gt; prompt</li>
+                    <li>Paste the JavaScript code and press Enter</li>
+                    <li>Copy the cookies from the dialog box that opens</li>
+                    <li>Switch back to this tab</li>
+                    <li>Paste the copied cookies in the MFC Session Cookies text area, above</li>
+                    <li>Select your desired storage option below</li>
+                    <li>Review the security and privacy information if needed</li>
+                  </Text>
+                </Box>
+              </Collapse>
+            </Box>
+
+            {/* Collapsible Storage Options */}
+            <Box mt={3}>
+              <Text fontSize="sm" fontWeight="medium" mb={2}>
+                Storage Option:
+                <Text as="span" ml={2} color={useColorModeValue('blue.600', 'blue.300')}>
+                  {storageType === 'one-time' && 'One-time (cleared when form closes)'}
+                  {storageType === 'session' && 'Session (cleared on logout)'}
+                  {storageType === 'persistent' && 'Persistent (encrypted)'}
+                </Text>
+              </Text>
+              <RadioGroup value={storageType} onChange={(value) => setStorageType(value as StorageType)}>
+                <Stack direction="column" spacing={2}>
+                  <Radio value="one-time" size="sm">
+                    <Tooltip label="Stored in browser memory only - cleared when you close this form">
+                      <Text fontSize="sm">One-time use (cleared when form closes)</Text>
+                    </Tooltip>
+                  </Radio>
+                  <Radio value="session" size="sm">
+                    <Tooltip label="Stored in browser session - cleared when you log out">
+                      <Text fontSize="sm">Remember for this session (cleared on logout)</Text>
+                    </Tooltip>
+                  </Radio>
+                  <Radio value="persistent" size="sm">
+                    <Tooltip label="Encrypted and stored in browser - persists until manually cleared">
+                      <Text fontSize="sm">Remember until cleared (encrypted storage)</Text>
+                    </Tooltip>
+                  </Radio>
+                </Stack>
+              </RadioGroup>
+            </Box>
+
+            {/* Clear Cookies Button */}
+            <HStack mt={3} spacing={2}>
+              <Button
+                size="sm"
+                leftIcon={<FaTrash />}
+                colorScheme="red"
+                variant="outline"
+                onClick={() => {
+                  clearMfcCookies();
+                  setValue('mfcAuth', '');
+                  setCookiesStored(false);
+                  setStorageType('one-time');
+                  toast({
+                    title: 'Cookies Cleared',
+                    description: 'MFC cookies have been removed from storage',
+                    status: 'info',
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                }}
+                isDisabled={!cookiesStored}
+              >
+                Clear MFC Cookies
+              </Button>
+            </HStack>
+
+            {/* Collapsible Security Section */}
+            <Box mt={3}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowSecurity(!showSecurity)}
+                rightIcon={showSecurity ? <FaChevronUp /> : <FaChevronDown />}
+                width="full"
+                justifyContent="space-between"
+              >
+                <HStack>
+                  <FaLock />
+                  <Text>Security & Privacy</Text>
+                </HStack>
+              </Button>
+              <Collapse in={showSecurity} animateOpacity>
+                <Alert status="info" mt={2} borderRadius="md">
+                  <AlertIcon />
+                  <Box fontSize="xs">
+                    <Text fontWeight="bold" mb={2}>🔒 Security & Privacy</Text>
+                    <Text mb={2}>
+                      When provided, MFC cookies are encrypted and stored only in your browser's localStorage.
+                      They are securely transmitted to our services when scraping, as MFC requires your
+                      authenticated session to authorize your access to:
+                    </Text>
+                    <Text as="ul" pl={4} mb={2}>
+                      <li>NSFW/NSFW+ restricted content</li>
+                      <li>Your MFC Manager catalog (for bulk import/sync)</li>
+                      <li>Other authorized private or restricted items on MFC</li>
+                    </Text>
+                    <Text mb={2}>
+                      <strong>Our services immediately discard your cookies after retrieving the data</strong>—they
+                      are never stored on our servers. All services are open source for full transparency.
+                    </Text>
+                    <Text fontWeight="medium" mb={1}>Browser Storage Options:</Text>
+                    <Text fontSize="sm" mb={2} fontStyle="italic">
+                      (These options control how your cookies are stored <em>in your browser</em>, not on our servers)
+                    </Text>
+                    <Text as="ul" pl={4} mb={2}>
+                      <li>One-time use: Stored in browser memory only—cleared when you close this form</li>
+                      <li>Remember for this session: Stored in browser session—cleared when you log out</li>
+                      <li>Remember until cleared: Encrypted in browser localStorage—persisted until you manually clear them</li>
+                    </Text>
+                    <Text mb={2}>
+                      You can always clear stored cookies manually using the "Clear MFC Cookies" button.
+                      No cookies are stored if that button is disabled.
+                    </Text>
+                    <Text mb={2}>
+                      <strong>Note:</strong> Content retrieval is subject to your MFC account's content access
+                      permissions. MFC enforces age-restricted content access based on your account settings,
+                      ensuring legal compliance.
+                    </Text>
+                    <Text fontWeight="bold" color={useColorModeValue('red.600', 'red.400')}>
+                      ⚠️ Important: Never share your MFC cookies with anyone—they provide access to your MFC account.
+                    </Text>
+                  </Box>
+                </Alert>
+              </Collapse>
+            </Box>
+          </FormControl>
+        </Box>
 
         <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }} gap={6}>
           <GridItem>
@@ -532,14 +836,14 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
                 Leave blank to auto-fetch from MFC
               </Text>
               {imageUrl && (
-                <Box mt={4} p={4} border="1px" borderColor="gray.200" borderRadius="md">
+                <Box mt={4} p={4} border="1px" borderColor={previewBorderColor} borderRadius="md">
                   <Text fontSize="sm" fontWeight="semibold" mb={2}>Image Preview:</Text>
-                  <Box 
-                    display="flex" 
-                    alignItems="center" 
-                    justifyContent="center" 
-                    maxH="300px" 
-                    bg="gray.50"
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    maxH="300px"
+                    bg={previewBg}
                     borderRadius="md"
                     overflow="hidden"
                   >
@@ -562,15 +866,28 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
           </GridItem>
         </Grid>
 
-        <Button
-          mt={4}
-          colorScheme="brand"
-          isLoading={isLoading}
-          type="submit"
-          size="lg"
-        >
-          {initialData ? 'Update Figure' : 'Add Figure'}
-        </Button>
+        <HStack mt={4} spacing={4}>
+          <Button
+            colorScheme="brand"
+            isLoading={isLoading}
+            type="submit"
+            size="lg"
+          >
+            {initialData ? 'Update Figure' : 'Add Figure'}
+          </Button>
+
+          {!initialData && (
+            <Button
+              colorScheme="green"
+              isLoading={isLoading}
+              onClick={() => setSaveAndAddAnother(true)}
+              type="submit"
+              size="lg"
+            >
+              Save & Add Another
+            </Button>
+          )}
+        </HStack>
       </VStack>
     </Box>
   );

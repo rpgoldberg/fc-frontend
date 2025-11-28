@@ -40,9 +40,7 @@ const Sidebar: React.FC = () => {
   return (
     <Box
       as="aside"
-      h="calc(100vh - 100px)"
-      position="sticky"
-      top="80px"
+      height="100%"
       borderRight={{ base: 'none', md: '1px solid' }}
       borderColor={{ base: 'transparent', md: 'gray.200' }}
       pr={4}

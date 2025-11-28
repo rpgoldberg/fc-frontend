@@ -1,33 +1,30 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
+  console.log('[SETUP PROXY] Configuring proxies...');
+
   // Proxy /api requests to backend, stripping the /api prefix
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'http://backend:5070',
+      target: 'http://localhost:5000',
       changeOrigin: true,
       pathRewrite: {
         '^/api': '', // Remove /api prefix
       },
+      logLevel: 'debug',
     })
   );
-
-  // Proxy /register-frontend to backend
-  app.use(
-    '/register-frontend',
-    createProxyMiddleware({
-      target: 'http://backend:5070',
-      changeOrigin: true,
-    })
-  );
+  console.log('[SETUP PROXY] /api proxy configured');
 
   // Proxy /version to backend
   app.use(
     '/version',
     createProxyMiddleware({
-      target: 'http://backend:5070',
+      target: 'http://localhost:5000',
       changeOrigin: true,
+      logLevel: 'debug',
     })
   );
+  console.log('[SETUP PROXY] /version proxy configured');
 };

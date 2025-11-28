@@ -32,7 +32,7 @@ server {
     # Frontend health endpoint
     location /health {
         add_header Content-Type application/json;
-        return 200 '{"status":"healthy","service":"figure-collector-frontend","timestamp":"2025-08-09T00:00:00.000Z"}';
+        return 200 '{"status":"healthy","service":"fc-frontend","timestamp":"2025-08-09T00:00:00.000Z"}';
     }
 
 

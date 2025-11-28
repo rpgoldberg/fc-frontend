@@ -16,7 +16,7 @@ import {
   InputGroup,
   InputRightElement,
   useToast,
-} from '@chakra-ui/react';
+useColorModeValue, } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { FaEye, FaEyeSlash, FaCube } from 'react-icons/fa';
 import { loginUser } from '../api';
@@ -28,6 +28,10 @@ interface LoginFormData {
 }
 
 const Login: React.FC = () => {
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const pageBg = useColorModeValue('gray.50', 'gray.900');
+  const headingColor = useColorModeValue('gray.800', 'gray.100');
+  const textColor = useColorModeValue('gray.600', 'gray.400');
   const [showPassword, setShowPassword] = React.useState(false);
   const { setUser } = useAuthStore();
   const navigate = useNavigate();
@@ -88,9 +92,9 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Flex minH="100vh" align="center" justify="center" bg="gray.50">
+    <Flex minH="100vh" align="center" justify="center" bg={pageBg}>
       <Box
-        bg="white"
+        bg={cardBg}
         p={8}
         rounded="lg"
         shadow="lg"
@@ -99,10 +103,10 @@ const Login: React.FC = () => {
       >
         <Flex direction="column" align="center" mb={8}>
           <Icon as={FaCube} boxSize={12} color="brand.500" mb={2} />
-          <Heading size="xl" textAlign="center" color="gray.800">
+          <Heading size="xl" textAlign="center" color={headingColor}>
             FigureCollector
           </Heading>
-          <Text color="gray.600" mt={2}>
+          <Text color={textColor} mt={2}>
             Sign in to manage your collection
           </Text>
         </Flex>
