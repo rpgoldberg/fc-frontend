@@ -76,6 +76,8 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
 
   const previewBorderColor = useColorModeValue('gray.200', 'gray.600');
   const previewBg = useColorModeValue('gray.50', 'gray.700');
+  const codeBg = useColorModeValue('gray.100', 'gray.700');
+  const linkColor = useColorModeValue('blue.500', 'blue.300');
 
   const {
     register,
@@ -602,10 +604,12 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
                       '& p': { mb: 2 },
                       '& ul, & ol': { pl: 4, mb: 2 },
                       '& li': { mb: 1 },
-                      '& code': { bg: 'gray.100', px: 1, borderRadius: 'sm', fontSize: 'xs' },
-                      '& pre': { bg: 'gray.100', p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
-                      '& a': { color: 'blue.500', textDecoration: 'underline' },
+                      '& code': { bg: codeBg, px: 1, borderRadius: 'sm', fontSize: 'xs' },
+                      '& pre': { bg: codeBg, p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
+                      '& a': { color: linkColor, textDecoration: 'underline' },
                       '& strong': { fontWeight: 'bold' },
+                      '& table': { width: '100%', mb: 2 },
+                      '& th, & td': { border: '1px solid', borderColor: 'gray.300', p: 2, textAlign: 'left' },
                     }}>
                       {mfcConfigs.mfc_cookie_instructions?.value && (
                         <Markdown>{mfcConfigs.mfc_cookie_instructions.value}</Markdown>

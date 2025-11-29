@@ -60,6 +60,8 @@ const Profile: React.FC = () => {
   const helpBg = useColorModeValue('gray.50', 'gray.800');
   const storageTextColor = useColorModeValue('blue.600', 'blue.300');
   const warningColor = useColorModeValue('red.600', 'red.400');
+  const codeBg = useColorModeValue('gray.100', 'gray.700');
+  const linkColor = useColorModeValue('blue.500', 'blue.300');
 
   const { user, setUser, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -430,10 +432,12 @@ const Profile: React.FC = () => {
                     '& p': { mb: 2 },
                     '& ul, & ol': { pl: 4, mb: 2 },
                     '& li': { mb: 1 },
-                    '& code': { bg: 'gray.100', px: 1, borderRadius: 'sm', fontSize: 'xs' },
-                    '& pre': { bg: 'gray.100', p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
-                    '& a': { color: 'blue.500', textDecoration: 'underline' },
+                    '& code': { bg: codeBg, px: 1, borderRadius: 'sm', fontSize: 'xs' },
+                    '& pre': { bg: codeBg, p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
+                    '& a': { color: linkColor, textDecoration: 'underline' },
                     '& strong': { fontWeight: 'bold' },
+                    '& table': { width: '100%', mb: 2 },
+                    '& th, & td': { border: '1px solid', borderColor: 'gray.300', p: 2, textAlign: 'left' },
                   }}>
                     {mfcConfigs.mfc_cookie_instructions?.value && (
                       <Markdown>{mfcConfigs.mfc_cookie_instructions.value}</Markdown>
