@@ -4,6 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { render } from '../../test-utils';
 import FigureForm from '../FigureForm';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;

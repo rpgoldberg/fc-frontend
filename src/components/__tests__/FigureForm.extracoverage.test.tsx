@@ -8,6 +8,15 @@ import userEvent from '@testing-library/user-event';
 import FigureForm from '../FigureForm';
 import { ChakraProvider } from '@chakra-ui/react';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
