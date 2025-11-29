@@ -3,6 +3,15 @@ import { screen } from '@testing-library/react';
 import { render } from '../../test-utils';
 import FigureForm from '../FigureForm';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Simple mock for react-hook-form
 jest.mock('react-hook-form', () => ({
   __esModule: true,
