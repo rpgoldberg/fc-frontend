@@ -47,7 +47,7 @@ describe('Navbar', () => {
     });
 
     render(<Navbar />);
-    expect(screen.getByText('FigureCollector')).toBeInTheDocument();
+    expect(screen.getByText('FigureCollecting')).toBeInTheDocument();
   });
 
   it('renders auth buttons when not authenticated', () => {
@@ -80,9 +80,9 @@ describe('Navbar', () => {
 
     render(<Navbar />);
     
-    // Navigation links are responsive - they might be in desktop nav (hidden on mobile) 
+    // Navigation links are responsive - they might be in desktop nav (hidden on mobile)
     // or in mobile nav (hidden until expanded). Let's check for brand link which is always visible
-    expect(screen.getByRole('link', { name: /figurecollector/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /figurecollecting/i })).toBeInTheDocument();
     
     // Check that mobile nav toggle exists (indicates navigation structure is present)
     expect(screen.getByTestId('mobile-nav-toggle')).toBeInTheDocument();

@@ -1,4 +1,5 @@
 import React from 'react';
+import Markdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import {
@@ -421,15 +422,22 @@ const Profile: React.FC = () => {
                 {isLoadingConfigs ? (
                   <Spinner size="sm" />
                 ) : mfcConfigs.mfc_cookie_instructions?.value || mfcConfigs.mfc_cookie_script?.value ? (
-                  // Dynamic content from admin config
-                  <Box fontSize="sm" whiteSpace="pre-wrap">
-                    {mfcConfigs.mfc_cookie_instructions?.value &&
-                      mfcConfigs.mfc_cookie_instructions.value.split('\\n').map((line, idx) => (
-                        <Text key={idx} mb={line.startsWith('#') ? 2 : 1} fontWeight={line.startsWith('#') ? 'bold' : 'normal'}>
-                          {line.replace(/^#+\s*/, '')}
-                        </Text>
-                      ))
-                    }
+                  // Dynamic content from admin config - rendered as markdown
+                  <Box fontSize="sm" className="markdown-content" sx={{
+                    '& h1, & h2, & h3': { fontWeight: 'bold', mt: 2, mb: 1 },
+                    '& h1': { fontSize: 'lg' },
+                    '& h2': { fontSize: 'md' },
+                    '& p': { mb: 2 },
+                    '& ul, & ol': { pl: 4, mb: 2 },
+                    '& li': { mb: 1 },
+                    '& code': { bg: 'gray.100', px: 1, borderRadius: 'sm', fontSize: 'xs' },
+                    '& pre': { bg: 'gray.100', p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
+                    '& a': { color: 'blue.500', textDecoration: 'underline' },
+                    '& strong': { fontWeight: 'bold' },
+                  }}>
+                    {mfcConfigs.mfc_cookie_instructions?.value && (
+                      <Markdown>{mfcConfigs.mfc_cookie_instructions.value}</Markdown>
+                    )}
                     {mfcConfigs.mfc_cookie_script?.value && (
                       <Code fontSize="xs" p={2} display="block" whiteSpace="pre-wrap" mt={2}>
                         {mfcConfigs.mfc_cookie_script.value}
