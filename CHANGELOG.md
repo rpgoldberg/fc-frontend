@@ -5,6 +5,17 @@ All notable changes to the fc-frontend service will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-11-30
+
+### Changed
+- **Improved Security Scan Workflow**: Fixed vulnerability counting in scheduled scans
+  - Uses JSON parsing with `jq` instead of grep for accurate vulnerability counts
+  - Prevents false positive vulnerability reports from table headers
+  - Added auto-close feature for stale security issues when vulnerabilities are resolved
+  - Each service now scans only its own Docker image (eliminates redundant cross-service scanning)
+
+---
+
 ## [2.1.1] - 2025-11-28
 
 ### Added
