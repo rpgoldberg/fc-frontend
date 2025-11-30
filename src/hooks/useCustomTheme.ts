@@ -1,36 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useColorMode } from '@chakra-ui/react';
+import { useThemeStore, getResolvedTheme, ResolvedTheme } from '../stores/themeStore';
+import { ColorProfile } from '../types';
 
-export type CustomTheme = 'light' | 'dark' | 'terminal';
-
-const THEME_STORAGE_KEY = 'custom-theme';
+export type CustomTheme = ResolvedTheme;
 
 export const useCustomTheme = () => {
   const { setColorMode } = useColorMode();
-  const [customTheme, setCustomTheme] = useState<CustomTheme>(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return (stored as CustomTheme) || 'light';
-  });
+  const { colorProfile, setColorProfile } = useThemeStore();
+
+  // For 'surprise', we resolve to an actual theme once per session
+  const resolvedTheme = useMemo(() => getResolvedTheme(colorProfile), [colorProfile]);
 
   useEffect(() => {
-    localStorage.setItem(THEME_STORAGE_KEY, customTheme);
     // Keep Chakra color mode in sync (terminal uses dark as base)
-    if (customTheme === 'terminal') {
+    if (resolvedTheme === 'terminal') {
       setColorMode('dark');
     } else {
-      setColorMode(customTheme);
+      setColorMode(resolvedTheme);
     }
-  }, [customTheme, setColorMode]);
+  }, [resolvedTheme, setColorMode]);
 
   const cycleTheme = () => {
-    setCustomTheme((current) => {
-      if (current === 'light') return 'dark';
-      if (current === 'dark') return 'terminal';
-      return 'light';
-    });
+    const themes: ColorProfile[] = ['light', 'dark', 'terminal', 'surprise'];
+    const currentIndex = themes.indexOf(colorProfile);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setColorProfile(themes[nextIndex]);
   };
 
-  return { customTheme, cycleTheme, setCustomTheme };
+  // Expose both the stored profile and the resolved theme
+  return {
+    customTheme: resolvedTheme, // The actual theme being applied
+    colorProfile, // The stored preference (including 'surprise')
+    cycleTheme,
+    setCustomTheme: setColorProfile, // Set the stored preference
+  };
 };
 
 // Terminal theme color palette
