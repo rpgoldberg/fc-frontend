@@ -1,4 +1,5 @@
 import React from 'react';
+import Markdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import {
@@ -42,6 +43,7 @@ import { useForm } from 'react-hook-form';
 import { getUserProfile, updateUserProfile } from '../api';
 import { useAuthStore } from '../stores/authStore';
 import { clearMfcCookies, hasMfcCookies, getStorageType, type StorageType, storeMfcCookies, retrieveMfcCookies } from '../utils/crypto';
+import { usePublicConfigs } from '../hooks/usePublicConfig';
 
 interface ProfileFormData {
   username: string;
@@ -58,6 +60,8 @@ const Profile: React.FC = () => {
   const helpBg = useColorModeValue('gray.50', 'gray.800');
   const storageTextColor = useColorModeValue('blue.600', 'blue.300');
   const warningColor = useColorModeValue('red.600', 'red.400');
+  const codeBg = useColorModeValue('gray.100', 'gray.700');
+  const linkColor = useColorModeValue('blue.500', 'blue.300');
 
   const { user, setUser, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -74,7 +78,13 @@ const Profile: React.FC = () => {
   const [mfcAuthCookies, setMfcAuthCookies] = React.useState('');
   const [showHelp, setShowHelp] = React.useState(false);
   const [showSecurity, setShowSecurity] = React.useState(false);
-  
+
+  // Fetch dynamic MFC cookie instructions and script from backend
+  const { configs: mfcConfigs, isLoading: isLoadingConfigs } = usePublicConfigs([
+    'mfc_cookie_script',
+    'mfc_cookie_instructions'
+  ]);
+
   const { data: profile, isLoading, error } = useQuery('userProfile', getUserProfile) || { data: null, isLoading: false, error: null };
   
   const {
@@ -411,34 +421,38 @@ const Profile: React.FC = () => {
             </Button>
             <Collapse in={showHelp} animateOpacity>
               <Box mt={2} p={3} bg={helpBg} borderRadius="md">
-                <Text fontSize="sm" fontWeight="medium" mb={2}>Console Method (Quick & Easy)</Text>
-                <Text fontSize="xs" mb={2} as="ol" pl={5}>
-                  <li>Copy the JavaScript code below</li>
-                </Text>
-                <Code fontSize="xs" p={2} display="block" whiteSpace="pre-wrap" mb={2}>
-{/* eslint-disable-next-line no-script-url */}
-{`javascript:(function(){
-    const c={};
-    ['PHPSESSID','sesUID','sesEID','cf_clearance','TBv4_Iden','TBv4_Hash'].forEach(n=>{
-      const v=document.cookie.split(';').find(c=>c.trim().startsWith(n+'='));
-      if(v)c[n]=v.split('=')[1]
-    });
-    const o=JSON.stringify(c,null,2);
-    prompt('✅ MFC Cookies (Ctrl+C to copy):', o);
-  })();`}
-                </Code>
-                <Text fontSize="xs" as="ol" start={2} pl={5}>
-                  <li>Open or switch to MFC in another tab and ensure you are logged in</li>
-                  <li>Open Developer Tools (F12 or Ctrl+Shift+I on Windows)</li>
-                  <li>Select the Console tab at the top</li>
-                  <li>Click in the area next to the &gt; prompt</li>
-                  <li>Paste the JavaScript code and press Enter</li>
-                  <li>Copy the cookies from the dialog box that opens</li>
-                  <li>Switch back to this tab</li>
-                  <li>Paste the copied cookies in the MFC Session Cookies text area, above</li>
-                  <li>Select your desired storage option below</li>
-                  <li>Review the security and privacy information if needed</li>
-                </Text>
+                {isLoadingConfigs ? (
+                  <Spinner size="sm" />
+                ) : mfcConfigs.mfc_cookie_instructions?.value || mfcConfigs.mfc_cookie_script?.value ? (
+                  // Dynamic content from admin config - rendered as markdown
+                  <Box fontSize="sm" className="markdown-content" sx={{
+                    '& h1, & h2, & h3': { fontWeight: 'bold', mt: 2, mb: 1 },
+                    '& h1': { fontSize: 'lg' },
+                    '& h2': { fontSize: 'md' },
+                    '& p': { mb: 2 },
+                    '& ul, & ol': { pl: 4, mb: 2 },
+                    '& li': { mb: 1 },
+                    '& code': { bg: codeBg, px: 1, borderRadius: 'sm', fontSize: 'xs' },
+                    '& pre': { bg: codeBg, p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
+                    '& a': { color: linkColor, textDecoration: 'underline' },
+                    '& strong': { fontWeight: 'bold' },
+                    '& table': { width: '100%', mb: 2 },
+                    '& th, & td': { border: '1px solid', borderColor: 'gray.300', p: 2, textAlign: 'left' },
+                  }}>
+                    {mfcConfigs.mfc_cookie_instructions?.value && (
+                      <Markdown>{mfcConfigs.mfc_cookie_instructions.value}</Markdown>
+                    )}
+                    {mfcConfigs.mfc_cookie_script?.value && (
+                      <Code fontSize="xs" p={2} display="block" whiteSpace="pre-wrap" mt={2}>
+                        {mfcConfigs.mfc_cookie_script.value}
+                      </Code>
+                    )}
+                  </Box>
+                ) : (
+                  <Text fontSize="sm" color="gray.500">
+                    Instructions not available. Please contact an administrator.
+                  </Text>
+                )}
               </Box>
             </Collapse>
           </Box>

@@ -68,10 +68,7 @@ const Layout: React.FC = () => {
       {/* Footer with version info */}
       <Box data-testid="footer" role="contentinfo" as="footer" py={4} borderTop="1px" borderColor={footerBorder} bg={footerBg} flexShrink={0}>
         <Container maxW="container.xl">
-          <Flex justify="space-between" align="center">
-            <Text fontSize="sm" color={footerText}>
-              FigureCollector
-            </Text>
+          <Flex justify="flex-end" align="center">
             {versionInfo && (
               <Popover trigger="hover" placement="top-end">
                 <PopoverTrigger>

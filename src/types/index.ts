@@ -57,3 +57,11 @@ export interface StatsData {
   scaleStats: { _id: string; count: number }[];
   locationStats: { _id: string; count: number }[];
 }
+
+export interface SystemConfig {
+  key: string;
+  value: string;
+  type: 'string' | 'json' | 'markdown' | 'script';
+  description?: string;
+  isPublic: boolean;
+}

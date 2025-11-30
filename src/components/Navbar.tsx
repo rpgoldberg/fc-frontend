@@ -177,7 +177,7 @@ const Navbar: React.FC = () => {
               textDecoration: 'none',
             }}
           >
-            FigureCollector
+            FigureCollecting
           </Link>
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>

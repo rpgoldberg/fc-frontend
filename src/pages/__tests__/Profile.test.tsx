@@ -4,6 +4,15 @@ import { render, mockUser } from '../../test-utils';
 import Profile from '../Profile';
 import { useAuthStore } from '../../stores/authStore';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock useAuthStore
 jest.mock('../../stores/authStore');
 const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
