@@ -315,6 +315,7 @@ describe('FigureForm Extra Coverage Tests', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
+        // onSubmit is now called with (data, addAnother)
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
             manufacturer: 'Test Manufacturer',
@@ -324,7 +325,8 @@ describe('FigureForm Extra Coverage Tests', () => {
             boxNumber: '',
             imageUrl: '',
             mfcLink: '',
-          })
+          }),
+          expect.any(Boolean) // addAnother flag
         );
       });
     });

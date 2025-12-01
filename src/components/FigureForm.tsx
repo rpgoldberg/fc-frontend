@@ -45,15 +45,19 @@ import { Figure, FigureFormData } from '../types';
 import { usePublicConfigs } from '../hooks/usePublicConfig';
 
 
+type SubmitAction = 'save' | 'saveAndAdd' | null;
+
 interface FigureFormProps {
   initialData?: Figure;
-  onSubmit: (data: FigureFormData) => void;
+  onSubmit: (data: FigureFormData, addAnother?: boolean) => void;
   isLoading: boolean;
+  loadingAction?: SubmitAction;  // Which button triggered the loading state
+  onResetComplete?: () => void;  // Callback when form reset is complete (for Save & Add Another)
 }
 
 const logger = createLogger('FIGURE_FORM');
 
-const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoading }) => {
+const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoading, loadingAction, onResetComplete }) => {
   const [isScrapingMFC, setIsScrapingMFC] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -66,7 +70,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   const [showHelp, setShowHelp] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
   const [cookiesStored, setCookiesStored] = useState(hasMfcCookies());
-  const [saveAndAddAnother, setSaveAndAddAnother] = useState(false);
+  const [pendingAction, setPendingAction] = useState<SubmitAction>(null);
 
   // Fetch dynamic MFC cookie instructions and script from backend
   const { configs: mfcConfigs, isLoading: isLoadingConfigs } = usePublicConfigs([
@@ -471,39 +475,40 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     };
   }, [storageType]);
 
-  // Handle form submission with optional form reset for "Save & Add Another"
-  const handleFormSubmit = async (data: FigureFormData) => {
-    // Submit the data
-    await onSubmit(data);
-
-    // If "Save & Add Another" was clicked and this is Add mode, reset the form
-    if (saveAndAddAnother && !initialData) {
-      // Reset form fields but preserve MFC cookies
-      const currentMfcAuth = getValues('mfcAuth');
-      reset({
-        manufacturer: '',
-        name: '',
-        scale: '',
-        mfcLink: '',
-        mfcAuth: currentMfcAuth, // Preserve MFC auth cookies
-        location: '',
-        boxNumber: '',
-        imageUrl: '',
-      });
-
-      // Show success toast
-      toast({
-        title: 'Figure added!',
-        description: 'Form cleared for next entry.',
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      });
-
-      // Reset the flag
-      setSaveAndAddAnother(false);
-    }
+  // Handle form submission - delegates to parent with addAnother flag
+  const handleFormSubmit = (data: FigureFormData) => {
+    const isAddAnother = pendingAction === 'saveAndAdd';
+    // Pass the addAnother flag to parent so it can decide whether to navigate
+    onSubmit(data, isAddAnother);
   };
+
+  // Reset form for "Save & Add Another" - called by parent after successful save
+  const resetFormForAddAnother = useCallback(() => {
+    // Reset form fields but preserve MFC cookies
+    const currentMfcAuth = getValues('mfcAuth');
+    reset({
+      manufacturer: '',
+      name: '',
+      scale: '',
+      mfcLink: '',
+      mfcAuth: currentMfcAuth, // Preserve MFC auth cookies
+      location: '',
+      boxNumber: '',
+      imageUrl: '',
+    });
+    // Reset pending action
+    setPendingAction(null);
+    // Notify parent that reset is complete
+    onResetComplete?.();
+  }, [getValues, reset, onResetComplete]);
+
+  // Effect to reset form when parent signals success for "Save & Add Another"
+  useEffect(() => {
+    // When loading finishes after a saveAndAdd action, reset the form
+    if (!isLoading && loadingAction === 'saveAndAdd' && pendingAction === 'saveAndAdd') {
+      resetFormForAddAnother();
+    }
+  }, [isLoading, loadingAction, pendingAction, resetFormForAddAnother]);
 
   return (
     <Box as="form" onSubmit={handleSubmit(handleFormSubmit)} role="form" aria-labelledby="figure-form-title">
@@ -883,9 +888,11 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
         <HStack mt={4} spacing={4}>
           <Button
             colorScheme="brand"
-            isLoading={isLoading}
+            isLoading={isLoading && (loadingAction === 'save' || pendingAction === 'save')}
             type="submit"
             size="lg"
+            onClick={() => setPendingAction('save')}
+            isDisabled={isLoading}
           >
             {initialData ? 'Update Figure' : 'Add Figure'}
           </Button>
@@ -893,10 +900,11 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
           {!initialData && (
             <Button
               colorScheme="green"
-              isLoading={isLoading}
-              onClick={() => setSaveAndAddAnother(true)}
+              isLoading={isLoading && (loadingAction === 'saveAndAdd' || pendingAction === 'saveAndAdd')}
               type="submit"
               size="lg"
+              onClick={() => setPendingAction('saveAndAdd')}
+              isDisabled={isLoading}
             >
               Save & Add Another
             </Button>
