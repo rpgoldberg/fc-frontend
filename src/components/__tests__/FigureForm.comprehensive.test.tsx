@@ -259,10 +259,14 @@ describe('FigureForm Comprehensive Tests', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
-        expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
-          manufacturer: expect.any(String),
-          name: expect.any(String),
-        }));
+        // onSubmit is now called with (data, addAnother) - addAnother is false when submitting via form submit
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            manufacturer: expect.any(String),
+            name: expect.any(String),
+          }),
+          expect.any(Boolean) // addAnother flag
+        );
       });
     });
 

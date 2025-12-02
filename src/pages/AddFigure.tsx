@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQueryClient } from 'react-query';
 import {
@@ -17,27 +17,46 @@ import { createFigure } from '../api';
 import FigureForm from '../components/FigureForm';
 import { FigureFormData } from '../types';
 
+type SubmitAction = 'save' | 'saveAndAdd' | null;
+
 const AddFigure: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
   const navigate = useNavigate();
   const toast = useToast();
   const queryClient = useQueryClient();
-  
+  const [currentAction, setCurrentAction] = useState<SubmitAction>(null);
+  // Use ref for synchronous access in callbacks (state updates are async)
+  const currentActionRef = useRef<SubmitAction>(null);
+
   const mutation = useMutation(createFigure, {
     onSuccess: () => {
       // Invalidate all queries that might contain figure data
       queryClient.invalidateQueries('figures');
       queryClient.invalidateQueries('recentFigures');
       queryClient.invalidateQueries('dashboardStats');
-      
-      toast({
-        title: 'Success',
-        description: 'Figure added successfully',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      navigate('/figures');
+
+      // Only navigate if NOT "Save & Add Another"
+      // Use ref for synchronous value (state may not have updated yet)
+      if (currentActionRef.current !== 'saveAndAdd') {
+        toast({
+          title: 'Success',
+          description: 'Figure added successfully',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        navigate('/figures');
+      } else {
+        // For "Save & Add Another", show a different toast
+        toast({
+          title: 'Figure added!',
+          description: 'Form cleared for next entry.',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
+        // Form will be reset by FigureForm's useEffect when it detects loading finished
+      }
     },
     onError: (error: any) => {
       toast({
@@ -47,12 +66,25 @@ const AddFigure: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
+      // Reset action on error so user can try again
+      setCurrentAction(null);
     },
   });
 
-  const handleSubmit = (data: FigureFormData) => {
+  const handleSubmit = (data: FigureFormData, addAnother?: boolean) => {
+    const action: SubmitAction = addAnother ? 'saveAndAdd' : 'save';
+    // Set ref immediately (synchronous) for use in callbacks
+    currentActionRef.current = action;
+    // Set state for UI updates (async)
+    setCurrentAction(action);
     mutation.mutate(data);
   };
+
+  const handleResetComplete = useCallback(() => {
+    // Reset action after form has been reset
+    currentActionRef.current = null;
+    setCurrentAction(null);
+  }, []);
 
   return (
     <Box>
@@ -84,6 +116,8 @@ const AddFigure: React.FC = () => {
         <FigureForm
           onSubmit={handleSubmit}
           isLoading={mutation.isLoading}
+          loadingAction={currentAction}
+          onResetComplete={handleResetComplete}
         />
       </Box>
     </Box>
