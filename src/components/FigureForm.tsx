@@ -78,12 +78,6 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     'mfc_cookie_instructions'
   ]);
 
-  // Fetch dynamic MFC cookie instructions and script from backend
-  const { configs: mfcConfigs, isLoading: isLoadingConfigs } = usePublicConfigs([
-    'mfc_cookie_script',
-    'mfc_cookie_instructions'
-  ]);
-
   const previewBorderColor = useColorModeValue('gray.200', 'gray.600');
   const previewBg = useColorModeValue('gray.50', 'gray.700');
   const codeBg = useColorModeValue('gray.100', 'gray.700');
