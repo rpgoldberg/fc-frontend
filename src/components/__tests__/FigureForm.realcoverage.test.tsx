@@ -357,11 +357,13 @@ describe('FigureForm Real Coverage Tests', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
+        // onSubmit is now called with (data, addAnother)
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
             manufacturer: 'Test Manufacturer',
             name: 'Test Figure',
-          })
+          }),
+          expect.any(Boolean) // addAnother flag
         );
       });
     });
