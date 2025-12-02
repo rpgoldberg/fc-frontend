@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQueryClient } from 'react-query';
 import {
@@ -25,6 +25,8 @@ const AddFigure: React.FC = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [currentAction, setCurrentAction] = useState<SubmitAction>(null);
+  // Use ref for synchronous access in callbacks (state updates are async)
+  const currentActionRef = useRef<SubmitAction>(null);
 
   const mutation = useMutation(createFigure, {
     onSuccess: () => {
@@ -34,7 +36,8 @@ const AddFigure: React.FC = () => {
       queryClient.invalidateQueries('dashboardStats');
 
       // Only navigate if NOT "Save & Add Another"
-      if (currentAction !== 'saveAndAdd') {
+      // Use ref for synchronous value (state may not have updated yet)
+      if (currentActionRef.current !== 'saveAndAdd') {
         toast({
           title: 'Success',
           description: 'Figure added successfully',
@@ -70,12 +73,16 @@ const AddFigure: React.FC = () => {
 
   const handleSubmit = (data: FigureFormData, addAnother?: boolean) => {
     const action: SubmitAction = addAnother ? 'saveAndAdd' : 'save';
+    // Set ref immediately (synchronous) for use in callbacks
+    currentActionRef.current = action;
+    // Set state for UI updates (async)
     setCurrentAction(action);
     mutation.mutate(data);
   };
 
   const handleResetComplete = useCallback(() => {
     // Reset action after form has been reset
+    currentActionRef.current = null;
     setCurrentAction(null);
   }, []);
 
