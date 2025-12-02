@@ -8,6 +8,15 @@ import userEvent from '@testing-library/user-event';
 import FigureForm from '../FigureForm';
 import { ChakraProvider } from '@chakra-ui/react';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
@@ -306,6 +315,7 @@ describe('FigureForm Extra Coverage Tests', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
+        // onSubmit is now called with (data, addAnother)
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
             manufacturer: 'Test Manufacturer',
@@ -315,7 +325,8 @@ describe('FigureForm Extra Coverage Tests', () => {
             boxNumber: '',
             imageUrl: '',
             mfcLink: '',
-          })
+          }),
+          expect.any(Boolean) // addAnother flag
         );
       });
     });
@@ -415,6 +426,138 @@ describe('FigureForm Extra Coverage Tests', () => {
 
       // Should not cause errors
       expect(() => unmount()).not.toThrow();
+    });
+  });
+
+  describe('Save & Add Another Button Flow', () => {
+    it('should call onSubmit with addAnother=false when Save button is clicked', async () => {
+      const onSubmit = jest.fn();
+      renderFigureForm({ onSubmit });
+
+      // Fill required fields using fireEvent for speed
+      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
+      const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
+      fireEvent.change(manufacturerInput, { target: { value: 'Test Manufacturer' } });
+      fireEvent.change(nameInput, { target: { value: 'Test Figure' } });
+
+      // Find and click the Save button (Add Figure)
+      const saveButton = screen.getByRole('button', { name: /add figure/i });
+      fireEvent.click(saveButton);
+
+      // Verify onSubmit was called with addAnother=false
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            manufacturer: 'Test Manufacturer',
+            name: 'Test Figure',
+          }),
+          false
+        );
+      });
+    });
+
+    it('should call onSubmit with addAnother=true when Save & Add Another button is clicked', async () => {
+      const onSubmit = jest.fn();
+      renderFigureForm({ onSubmit });
+
+      // Fill required fields using fireEvent for speed
+      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
+      const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
+      fireEvent.change(manufacturerInput, { target: { value: 'Test Manufacturer' } });
+      fireEvent.change(nameInput, { target: { value: 'Test Figure' } });
+
+      // Find and click the Save & Add Another button
+      const saveAddButton = screen.getByRole('button', { name: /save & add another/i });
+      fireEvent.click(saveAddButton);
+
+      // Submit the form directly since click may not trigger submit on second button
+      const form = screen.getByRole('form');
+      fireEvent.submit(form);
+
+      // Verify onSubmit was called with addAnother=true
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            manufacturer: 'Test Manufacturer',
+            name: 'Test Figure',
+          }),
+          true
+        );
+      }, { timeout: 10000 });
+    });
+
+    it('should reset form when loadingAction is saveAndAdd and loading completes', async () => {
+      const onSubmit = jest.fn();
+      const onResetComplete = jest.fn();
+
+      const { rerender } = render(
+        <ChakraProvider>
+          <FigureForm
+            onSubmit={onSubmit}
+            isLoading={false}
+            loadingAction={null}
+            onResetComplete={onResetComplete}
+          />
+        </ChakraProvider>
+      );
+
+      // Fill required fields and click Save & Add Another
+      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
+      const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
+      fireEvent.change(manufacturerInput, { target: { value: 'Test Manufacturer' } });
+      fireEvent.change(nameInput, { target: { value: 'Test Figure' } });
+
+      const saveAddButton = screen.getByRole('button', { name: /save & add another/i });
+      fireEvent.click(saveAddButton);
+
+      // Simulate loading state (parent sets loadingAction)
+      rerender(
+        <ChakraProvider>
+          <FigureForm
+            onSubmit={onSubmit}
+            isLoading={true}
+            loadingAction="saveAndAdd"
+            onResetComplete={onResetComplete}
+          />
+        </ChakraProvider>
+      );
+
+      // Simulate loading complete (triggers reset)
+      rerender(
+        <ChakraProvider>
+          <FigureForm
+            onSubmit={onSubmit}
+            isLoading={false}
+            loadingAction="saveAndAdd"
+            onResetComplete={onResetComplete}
+          />
+        </ChakraProvider>
+      );
+
+      // Form should be reset and onResetComplete called
+      await waitFor(() => {
+        expect(onResetComplete).toHaveBeenCalled();
+      });
+    });
+
+    it('should disable buttons when loading', () => {
+      renderFigureForm({ isLoading: true, loadingAction: 'save' });
+
+      const saveButton = screen.getByRole('button', { name: /add figure/i });
+      const saveAddButton = screen.getByRole('button', { name: /save & add another/i });
+
+      expect(saveButton).toBeDisabled();
+      expect(saveAddButton).toBeDisabled();
+    });
+
+    it('should keep buttons disabled during saveAndAdd loading', () => {
+      renderFigureForm({ isLoading: true, loadingAction: 'saveAndAdd' });
+
+      const saveButton = screen.getByRole('button', { name: /add figure/i });
+      const saveAddButton = screen.getByRole('button', { name: /save & add another/i });
+
+      expect(saveButton).toBeDisabled();
+      expect(saveAddButton).toBeDisabled();
     });
   });
 });

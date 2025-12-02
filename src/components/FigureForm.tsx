@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Markdown from 'react-markdown';
 import { createLogger } from '../utils/logger';
 import {
   Box,
@@ -41,17 +42,22 @@ import {
   type StorageType,
 } from '../utils/crypto';
 import { Figure, FigureFormData } from '../types';
+import { usePublicConfigs } from '../hooks/usePublicConfig';
 
+
+type SubmitAction = 'save' | 'saveAndAdd' | null;
 
 interface FigureFormProps {
   initialData?: Figure;
-  onSubmit: (data: FigureFormData) => void;
+  onSubmit: (data: FigureFormData, addAnother?: boolean) => void;
   isLoading: boolean;
+  loadingAction?: SubmitAction;  // Which button triggered the loading state
+  onResetComplete?: () => void;  // Callback when form reset is complete (for Save & Add Another)
 }
 
 const logger = createLogger('FIGURE_FORM');
 
-const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoading }) => {
+const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoading, loadingAction, onResetComplete }) => {
   const [isScrapingMFC, setIsScrapingMFC] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -64,10 +70,18 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   const [showHelp, setShowHelp] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
   const [cookiesStored, setCookiesStored] = useState(hasMfcCookies());
-  const [saveAndAddAnother, setSaveAndAddAnother] = useState(false);
+  const [pendingAction, setPendingAction] = useState<SubmitAction>(null);
+
+  // Fetch dynamic MFC cookie instructions and script from backend
+  const { configs: mfcConfigs, isLoading: isLoadingConfigs } = usePublicConfigs([
+    'mfc_cookie_script',
+    'mfc_cookie_instructions'
+  ]);
 
   const previewBorderColor = useColorModeValue('gray.200', 'gray.600');
   const previewBg = useColorModeValue('gray.50', 'gray.700');
+  const codeBg = useColorModeValue('gray.100', 'gray.700');
+  const linkColor = useColorModeValue('blue.500', 'blue.300');
 
   const {
     register,
@@ -461,39 +475,40 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     };
   }, [storageType]);
 
-  // Handle form submission with optional form reset for "Save & Add Another"
-  const handleFormSubmit = async (data: FigureFormData) => {
-    // Submit the data
-    await onSubmit(data);
-
-    // If "Save & Add Another" was clicked and this is Add mode, reset the form
-    if (saveAndAddAnother && !initialData) {
-      // Reset form fields but preserve MFC cookies
-      const currentMfcAuth = getValues('mfcAuth');
-      reset({
-        manufacturer: '',
-        name: '',
-        scale: '',
-        mfcLink: '',
-        mfcAuth: currentMfcAuth, // Preserve MFC auth cookies
-        location: '',
-        boxNumber: '',
-        imageUrl: '',
-      });
-
-      // Show success toast
-      toast({
-        title: 'Figure added!',
-        description: 'Form cleared for next entry.',
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      });
-
-      // Reset the flag
-      setSaveAndAddAnother(false);
-    }
+  // Handle form submission - delegates to parent with addAnother flag
+  const handleFormSubmit = (data: FigureFormData) => {
+    const isAddAnother = pendingAction === 'saveAndAdd';
+    // Pass the addAnother flag to parent so it can decide whether to navigate
+    onSubmit(data, isAddAnother);
   };
+
+  // Reset form for "Save & Add Another" - called by parent after successful save
+  const resetFormForAddAnother = useCallback(() => {
+    // Reset form fields but preserve MFC cookies
+    const currentMfcAuth = getValues('mfcAuth');
+    reset({
+      manufacturer: '',
+      name: '',
+      scale: '',
+      mfcLink: '',
+      mfcAuth: currentMfcAuth, // Preserve MFC auth cookies
+      location: '',
+      boxNumber: '',
+      imageUrl: '',
+    });
+    // Reset pending action
+    setPendingAction(null);
+    // Notify parent that reset is complete
+    onResetComplete?.();
+  }, [getValues, reset, onResetComplete]);
+
+  // Effect to reset form when parent signals success for "Save & Add Another"
+  useEffect(() => {
+    // When loading finishes after a saveAndAdd action, reset the form
+    if (!isLoading && loadingAction === 'saveAndAdd' && pendingAction === 'saveAndAdd') {
+      resetFormForAddAnother();
+    }
+  }, [isLoading, loadingAction, pendingAction, resetFormForAddAnother]);
 
   return (
     <Box as="form" onSubmit={handleSubmit(handleFormSubmit)} role="form" aria-labelledby="figure-form-title">
@@ -583,34 +598,38 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
               </Button>
               <Collapse in={showHelp} animateOpacity>
                 <Box mt={2} p={3} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="md">
-                  <Text fontSize="sm" fontWeight="medium" mb={2}>Console Method (Quick & Easy)</Text>
-                  <Text fontSize="xs" mb={2} as="ol" pl={5}>
-                    <li>Copy the JavaScript code below</li>
-                  </Text>
-                  <Code fontSize="xs" p={2} display="block" whiteSpace="pre-wrap" mb={2}>
-{/* eslint-disable-next-line no-script-url */}
-{`javascript:(function(){
-    const c={};
-    ['PHPSESSID','sesUID','sesEID','cf_clearance','TBv4_Iden','TBv4_Hash'].forEach(n=>{
-      const v=document.cookie.split(';').find(c=>c.trim().startsWith(n+'='));
-      if(v)c[n]=v.split('=')[1]
-    });
-    const o=JSON.stringify(c,null,2);
-    prompt('✅ MFC Cookies (Ctrl+C to copy):', o);
-  })();`}
-                  </Code>
-                  <Text fontSize="xs" as="ol" start={2} pl={5}>
-                    <li>Open or switch to MFC in another tab and ensure you are logged in</li>
-                    <li>Open Developer Tools (F12 or Ctrl+Shift+I on Windows)</li>
-                    <li>Select the Console tab at the top</li>
-                    <li>Click in the area next to the &gt; prompt</li>
-                    <li>Paste the JavaScript code and press Enter</li>
-                    <li>Copy the cookies from the dialog box that opens</li>
-                    <li>Switch back to this tab</li>
-                    <li>Paste the copied cookies in the MFC Session Cookies text area, above</li>
-                    <li>Select your desired storage option below</li>
-                    <li>Review the security and privacy information if needed</li>
-                  </Text>
+                  {isLoadingConfigs ? (
+                    <Spinner size="sm" />
+                  ) : mfcConfigs.mfc_cookie_instructions?.value || mfcConfigs.mfc_cookie_script?.value ? (
+                    // Dynamic content from admin config - rendered as markdown
+                    <Box fontSize="sm" className="markdown-content" sx={{
+                      '& h1, & h2, & h3': { fontWeight: 'bold', mt: 2, mb: 1 },
+                      '& h1': { fontSize: 'lg' },
+                      '& h2': { fontSize: 'md' },
+                      '& p': { mb: 2 },
+                      '& ul, & ol': { pl: 4, mb: 2 },
+                      '& li': { mb: 1 },
+                      '& code': { bg: codeBg, px: 1, borderRadius: 'sm', fontSize: 'xs' },
+                      '& pre': { bg: codeBg, p: 2, borderRadius: 'md', overflowX: 'auto', fontSize: 'xs' },
+                      '& a': { color: linkColor, textDecoration: 'underline' },
+                      '& strong': { fontWeight: 'bold' },
+                      '& table': { width: '100%', mb: 2 },
+                      '& th, & td': { border: '1px solid', borderColor: 'gray.300', p: 2, textAlign: 'left' },
+                    }}>
+                      {mfcConfigs.mfc_cookie_instructions?.value && (
+                        <Markdown>{mfcConfigs.mfc_cookie_instructions.value}</Markdown>
+                      )}
+                      {mfcConfigs.mfc_cookie_script?.value && (
+                        <Code fontSize="xs" p={2} display="block" whiteSpace="pre-wrap" mt={2}>
+                          {mfcConfigs.mfc_cookie_script.value}
+                        </Code>
+                      )}
+                    </Box>
+                  ) : (
+                    <Text fontSize="sm" color="gray.500">
+                      Instructions not available. Please contact an administrator.
+                    </Text>
+                  )}
                 </Box>
               </Collapse>
             </Box>
@@ -869,9 +888,11 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
         <HStack mt={4} spacing={4}>
           <Button
             colorScheme="brand"
-            isLoading={isLoading}
+            isLoading={isLoading && (loadingAction === 'save' || pendingAction === 'save')}
             type="submit"
             size="lg"
+            onClick={() => setPendingAction('save')}
+            isDisabled={isLoading}
           >
             {initialData ? 'Update Figure' : 'Add Figure'}
           </Button>
@@ -879,10 +900,11 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
           {!initialData && (
             <Button
               colorScheme="green"
-              isLoading={isLoading}
-              onClick={() => setSaveAndAddAnother(true)}
+              isLoading={isLoading && (loadingAction === 'saveAndAdd' || pendingAction === 'saveAndAdd')}
               type="submit"
               size="lg"
+              onClick={() => setPendingAction('saveAndAdd')}
+              isDisabled={isLoading}
             >
               Save & Add Another
             </Button>

@@ -76,7 +76,8 @@ const EditFigure: React.FC = () => {
     }
   );
 
-  const handleSubmit = (data: FigureFormData) => {
+  // Note: addAnother is ignored for EditFigure (only applicable in AddFigure)
+  const handleSubmit = (data: FigureFormData, _addAnother?: boolean) => {
     mutation.mutate(data);
   };
 
@@ -136,6 +137,7 @@ const EditFigure: React.FC = () => {
           initialData={figure}
           onSubmit={handleSubmit}
           isLoading={mutation.isLoading}
+          loadingAction={mutation.isLoading ? 'save' : null}
         />
       </Box>
     </Box>

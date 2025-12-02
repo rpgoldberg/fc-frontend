@@ -4,6 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { render } from '../../test-utils';
 import FigureForm from '../FigureForm';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
@@ -250,10 +259,14 @@ describe('FigureForm Comprehensive Tests', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
-        expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
-          manufacturer: expect.any(String),
-          name: expect.any(String),
-        }));
+        // onSubmit is now called with (data, addAnother) - addAnother is false when submitting via form submit
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            manufacturer: expect.any(String),
+            name: expect.any(String),
+          }),
+          expect.any(Boolean) // addAnother flag
+        );
       });
     });
 

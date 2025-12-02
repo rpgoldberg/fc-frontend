@@ -8,6 +8,15 @@ import userEvent from '@testing-library/user-event';
 import FigureForm from '../FigureForm';
 import { ChakraProvider } from '@chakra-ui/react';
 
+// Mock usePublicConfigs to avoid QueryClient dependency issues
+jest.mock('../../hooks/usePublicConfig', () => ({
+  usePublicConfigs: () => ({
+    configs: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
@@ -474,13 +483,17 @@ describe('FigureForm Targeted Coverage', () => {
       fireEvent.submit(form);
 
       await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-          manufacturer: 'Manufacturer',
-          name: 'Name',
-          scale: '1/8',
-          location: 'Location',
-          boxNumber: 'Box',
-        }));
+        // onSubmit is now called with (data, addAnother)
+        expect(onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            manufacturer: 'Manufacturer',
+            name: 'Name',
+            scale: '1/8',
+            location: 'Location',
+            boxNumber: 'Box',
+          }),
+          expect.any(Boolean) // addAnother flag
+        );
       });
     });
   });

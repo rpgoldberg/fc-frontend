@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
-import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, User } from '../types';
+import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User } from '../types';
 import { createLogger } from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
@@ -190,4 +190,16 @@ export const filterFigures = async (
 export const getFigureStats = async (): Promise<StatsData> => {
   const response = await api.get('/figures/stats');
   return response.data.data;
+};
+
+// Public Config API (no auth required)
+export const getPublicConfig = async (key: string): Promise<SystemConfig | null> => {
+  try {
+    const response = await api.get(`/config/${key}`);
+    return response.data.data;
+  } catch (error) {
+    // Return null if config not found (404) or any other error
+    logger.warn(`Failed to fetch public config '${key}':`, error);
+    return null;
+  }
 };
