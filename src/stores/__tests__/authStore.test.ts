@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useAuthStore } from '../authStore';
+import { useThemeStore } from '../themeStore';
 import { User } from '../../types';
 
 // Mock localStorage
@@ -183,27 +184,101 @@ describe('authStore', () => {
   describe('edge cases', () => {
     it('should handle undefined user gracefully', () => {
       const { result } = renderHook(() => useAuthStore());
-      
+
       act(() => {
         // @ts-ignore - Testing runtime behavior with undefined
         result.current.setUser(undefined);
       });
-      
+
       expect(result.current.user).toBeFalsy();
       expect(result.current.isAuthenticated).toBe(false);
     });
 
     it('should handle empty user object', () => {
       const { result } = renderHook(() => useAuthStore());
-      
+
       const emptyUser = {} as User;
-      
+
       act(() => {
         result.current.setUser(emptyUser);
       });
-      
+
       expect(result.current.user).toEqual(emptyUser);
       expect(result.current.isAuthenticated).toBe(true); // truthy object means authenticated
+    });
+  });
+
+  describe('colorProfile sync to themeStore', () => {
+    beforeEach(() => {
+      // Reset theme store to default
+      useThemeStore.setState({ colorProfile: 'light' });
+    });
+
+    it('should sync colorProfile to themeStore when user has colorProfile', () => {
+      const { result } = renderHook(() => useAuthStore());
+      const { result: themeResult } = renderHook(() => useThemeStore());
+
+      const userWithColorProfile: User = {
+        ...mockUser,
+        colorProfile: 'dark',
+      };
+
+      act(() => {
+        result.current.setUser(userWithColorProfile);
+      });
+
+      expect(themeResult.current.colorProfile).toBe('dark');
+    });
+
+    it('should sync terminal colorProfile to themeStore', () => {
+      const { result } = renderHook(() => useAuthStore());
+      const { result: themeResult } = renderHook(() => useThemeStore());
+
+      const userWithTerminal: User = {
+        ...mockUser,
+        colorProfile: 'terminal',
+      };
+
+      act(() => {
+        result.current.setUser(userWithTerminal);
+      });
+
+      expect(themeResult.current.colorProfile).toBe('terminal');
+    });
+
+    it('should not change themeStore when user has no colorProfile', () => {
+      const { result } = renderHook(() => useAuthStore());
+      const { result: themeResult } = renderHook(() => useThemeStore());
+
+      // Set theme to dark first
+      act(() => {
+        themeResult.current.setColorProfile('dark');
+      });
+
+      // User without colorProfile
+      act(() => {
+        result.current.setUser(mockUser);
+      });
+
+      // Theme should remain dark (not reset to light)
+      expect(themeResult.current.colorProfile).toBe('dark');
+    });
+
+    it('should not crash when setting null user', () => {
+      const { result } = renderHook(() => useAuthStore());
+      const { result: themeResult } = renderHook(() => useThemeStore());
+
+      // Set theme to terminal
+      act(() => {
+        themeResult.current.setColorProfile('terminal');
+      });
+
+      act(() => {
+        result.current.setUser(null);
+      });
+
+      // Theme should remain terminal (logout doesn't reset theme)
+      expect(themeResult.current.colorProfile).toBe('terminal');
     });
   });
 });

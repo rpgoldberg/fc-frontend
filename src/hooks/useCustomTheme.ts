@@ -1,6 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useColorMode } from '@chakra-ui/react';
 import { useThemeStore, getResolvedTheme, ResolvedTheme } from '../stores/themeStore';
+import { useAuthStore } from '../stores/authStore';
+import { updateUserProfile } from '../api';
 import { ColorProfile } from '../types';
 
 export type CustomTheme = ResolvedTheme;
@@ -8,6 +10,7 @@ export type CustomTheme = ResolvedTheme;
 export const useCustomTheme = () => {
   const { setColorMode } = useColorMode();
   const { colorProfile, setColorProfile } = useThemeStore();
+  const { isAuthenticated } = useAuthStore();
 
   // For 'surprise', we resolve to an actual theme once per session
   const resolvedTheme = useMemo(() => getResolvedTheme(colorProfile), [colorProfile]);
@@ -21,19 +24,33 @@ export const useCustomTheme = () => {
     }
   }, [resolvedTheme, setColorMode]);
 
-  const cycleTheme = () => {
+  // Sync theme to backend when authenticated
+  const setCustomTheme = useCallback((profile: ColorProfile) => {
+    // Update local state first (optimistic update)
+    setColorProfile(profile);
+
+    // Sync to backend if authenticated (fire and forget, don't block UI)
+    if (isAuthenticated) {
+      updateUserProfile({ colorProfile: profile }).catch(() => {
+        // Silently fail - local theme change still works
+        // Could add error toast here in future
+      });
+    }
+  }, [setColorProfile, isAuthenticated]);
+
+  const cycleTheme = useCallback(() => {
     const themes: ColorProfile[] = ['light', 'dark', 'terminal', 'surprise'];
     const currentIndex = themes.indexOf(colorProfile);
     const nextIndex = (currentIndex + 1) % themes.length;
-    setColorProfile(themes[nextIndex]);
-  };
+    setCustomTheme(themes[nextIndex]);
+  }, [colorProfile, setCustomTheme]);
 
   // Expose both the stored profile and the resolved theme
   return {
     customTheme: resolvedTheme, // The actual theme being applied
     colorProfile, // The stored preference (including 'surprise')
     cycleTheme,
-    setCustomTheme: setColorProfile, // Set the stored preference
+    setCustomTheme, // Set and sync the stored preference
   };
 };
 

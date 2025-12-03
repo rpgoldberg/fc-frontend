@@ -129,12 +129,12 @@ export const getUserSessions = async (): Promise<any[]> => {
 };
 
 export const getUserProfile = async (): Promise<User> => {
-  const response = await api.get('/users/profile');
+  const response = await api.get('/auth/profile');
   return response.data.data;
 };
 
 export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
-  const response = await api.put('/users/profile', userData);
+  const response = await api.put('/auth/profile', userData);
   return response.data.data;
 };
 

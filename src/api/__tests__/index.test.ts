@@ -211,7 +211,7 @@ describe('API Module', () => {
 
       const result = await mockApi.getUserProfile();
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/users/profile');
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/auth/profile');
       expect(result).toEqual(mockProfile);
     });
 
@@ -229,7 +229,7 @@ describe('API Module', () => {
 
       const result = await mockApi.updateUserProfile(updateData);
 
-      expect(mockAxiosInstance.put).toHaveBeenCalledWith('/users/profile', updateData);
+      expect(mockAxiosInstance.put).toHaveBeenCalledWith('/auth/profile', updateData);
       expect(result).toEqual(updatedProfile);
     });
   });
