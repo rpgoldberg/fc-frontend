@@ -21,9 +21,26 @@ import {
   Td,
   TableContainer,
   Divider,
-useColorModeValue, } from '@chakra-ui/react';
+  useColorModeValue,
+  Tooltip,
+} from '@chakra-ui/react';
 import { FaDownload } from 'react-icons/fa';
 import { getFigureStats } from '../api';
+
+// Helper component for truncated text with tooltip
+const TruncatedCell: React.FC<{ children: string; maxW?: string }> = ({ children, maxW = '200px' }) => (
+  <Tooltip label={children} placement="top" hasArrow openDelay={500}>
+    <Text
+      maxW={maxW}
+      whiteSpace="nowrap"
+      overflow="hidden"
+      textOverflow="ellipsis"
+      cursor="default"
+    >
+      {children}
+    </Text>
+  </Tooltip>
+);
 
 const Statistics: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
@@ -136,26 +153,28 @@ const Statistics: React.FC = () => {
         </Stat>
       </SimpleGrid>
       
-      <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={8}>
-        <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
+      <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} spacing={6}>
+        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg" minH="200px">
           <Heading size="md" mb={4} color={headingColor}>Manufacturers</Heading>
           <Divider mb={4} />
-          
-          <TableContainer>
-            <Table variant="simple" size="sm">
-              <Thead>
+
+          <TableContainer maxH="400px" overflowY="auto">
+            <Table variant="simple">
+              <Thead position="sticky" top={0} bg={cardBg} zIndex={1}>
                 <Tr>
-                  <Th>Manufacturer</Th>
-                  <Th isNumeric>Count</Th>
-                  <Th isNumeric>Percentage</Th>
+                  <Th minW="120px">Manufacturer</Th>
+                  <Th isNumeric minW="60px">Count</Th>
+                  <Th isNumeric minW="80px">%</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {stats.manufacturerStats.map((stat) => (
                   <Tr key={stat._id}>
-                    <Td>{stat._id}</Td>
-                    <Td isNumeric>{stat.count}</Td>
-                    <Td isNumeric>
+                    <Td>
+                      <TruncatedCell maxW="180px">{stat._id || 'Unknown'}</TruncatedCell>
+                    </Td>
+                    <Td isNumeric fontWeight="medium">{stat.count}</Td>
+                    <Td isNumeric color="gray.500">
                       {((stat.count / stats.totalCount) * 100).toFixed(1)}%
                     </Td>
                   </Tr>
@@ -164,26 +183,26 @@ const Statistics: React.FC = () => {
             </Table>
           </TableContainer>
         </Box>
-        
-        <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
+
+        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg" minH="200px">
           <Heading size="md" mb={4} color={headingColor}>Scales</Heading>
           <Divider mb={4} />
-          
-          <TableContainer>
-            <Table variant="simple" size="sm">
-              <Thead>
+
+          <TableContainer maxH="400px" overflowY="auto">
+            <Table variant="simple">
+              <Thead position="sticky" top={0} bg={cardBg} zIndex={1}>
                 <Tr>
-                  <Th>Scale</Th>
-                  <Th isNumeric>Count</Th>
-                  <Th isNumeric>Percentage</Th>
+                  <Th minW="80px">Scale</Th>
+                  <Th isNumeric minW="60px">Count</Th>
+                  <Th isNumeric minW="80px">%</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {stats.scaleStats.map((stat) => (
                   <Tr key={stat._id}>
-                    <Td>{stat._id}</Td>
-                    <Td isNumeric>{stat.count}</Td>
-                    <Td isNumeric>
+                    <Td>{stat._id || 'Unknown'}</Td>
+                    <Td isNumeric fontWeight="medium">{stat.count}</Td>
+                    <Td isNumeric color="gray.500">
                       {((stat.count / stats.totalCount) * 100).toFixed(1)}%
                     </Td>
                   </Tr>
@@ -192,26 +211,28 @@ const Statistics: React.FC = () => {
             </Table>
           </TableContainer>
         </Box>
-        
-        <Box bg={cardBg} p={5} shadow="sm" borderRadius="lg">
+
+        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg" minH="200px">
           <Heading size="md" mb={4} color={headingColor}>Storage Locations</Heading>
           <Divider mb={4} />
-          
-          <TableContainer>
-            <Table variant="simple" size="sm">
-              <Thead>
+
+          <TableContainer maxH="400px" overflowY="auto">
+            <Table variant="simple">
+              <Thead position="sticky" top={0} bg={cardBg} zIndex={1}>
                 <Tr>
-                  <Th>Location</Th>
-                  <Th isNumeric>Count</Th>
-                  <Th isNumeric>Percentage</Th>
+                  <Th minW="100px">Location</Th>
+                  <Th isNumeric minW="60px">Count</Th>
+                  <Th isNumeric minW="80px">%</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {stats.locationStats.map((stat) => (
                   <Tr key={stat._id}>
-                    <Td>{stat._id}</Td>
-                    <Td isNumeric>{stat.count}</Td>
-                    <Td isNumeric>
+                    <Td>
+                      <TruncatedCell maxW="150px">{stat._id || 'Unknown'}</TruncatedCell>
+                    </Td>
+                    <Td isNumeric fontWeight="medium">{stat.count}</Td>
+                    <Td isNumeric color="gray.500">
                       {((stat.count / stats.totalCount) * 100).toFixed(1)}%
                     </Td>
                   </Tr>
