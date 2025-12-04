@@ -9,11 +9,13 @@ export type CustomTheme = ResolvedTheme;
 
 export const useCustomTheme = () => {
   const { setColorMode } = useColorMode();
-  const { colorProfile, setColorProfile } = useThemeStore();
+  const { colorProfile, setColorProfile, surpriseVersion } = useThemeStore();
   const { isAuthenticated } = useAuthStore();
 
   // For 'surprise', we resolve to an actual theme once per session
-  const resolvedTheme = useMemo(() => getResolvedTheme(colorProfile), [colorProfile]);
+  // Include surpriseVersion to force re-randomization when user clicks surprise again
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const resolvedTheme = useMemo(() => getResolvedTheme(colorProfile), [colorProfile, surpriseVersion]);
 
   useEffect(() => {
     // Keep Chakra color mode in sync (terminal uses dark as base)

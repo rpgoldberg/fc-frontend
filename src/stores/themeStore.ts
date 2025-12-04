@@ -31,17 +31,30 @@ export const getResolvedTheme = (profile: ColorProfile): ResolvedTheme => {
 
 interface ThemeState {
   colorProfile: ColorProfile;
+  surpriseVersion: number; // Increment to force re-randomization
   setColorProfile: (profile: ColorProfile) => void;
+  triggerSurpriseReroll: () => void; // Force a new random theme
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       colorProfile: 'light',
-      setColorProfile: (profile) => set({ colorProfile: profile }),
+      surpriseVersion: 0,
+      setColorProfile: (profile) => {
+        const currentProfile = get().colorProfile;
+        // If clicking surprise while already on surprise, trigger reroll
+        if (profile === 'surprise' && currentProfile === 'surprise') {
+          set((state) => ({ surpriseVersion: state.surpriseVersion + 1 }));
+        } else {
+          set({ colorProfile: profile });
+        }
+      },
+      triggerSurpriseReroll: () => set((state) => ({ surpriseVersion: state.surpriseVersion + 1 })),
     }),
     {
       name: 'theme-storage',
+      partialize: (state) => ({ colorProfile: state.colorProfile }), // Don't persist surpriseVersion
     }
   )
 );

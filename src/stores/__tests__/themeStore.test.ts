@@ -48,6 +48,38 @@ describe('themeStore', () => {
 
       expect(result.current.colorProfile).toBe('surprise');
     });
+
+    it('should increment surpriseVersion when clicking surprise while already on surprise', () => {
+      const { result } = renderHook(() => useThemeStore());
+
+      // First, set to surprise
+      act(() => {
+        result.current.setColorProfile('surprise');
+      });
+
+      expect(result.current.colorProfile).toBe('surprise');
+      const initialVersion = result.current.surpriseVersion;
+
+      // Click surprise again while already on surprise
+      act(() => {
+        result.current.setColorProfile('surprise');
+      });
+
+      // Profile stays surprise, but version increments (triggers reroll)
+      expect(result.current.colorProfile).toBe('surprise');
+      expect(result.current.surpriseVersion).toBe(initialVersion + 1);
+    });
+
+    it('should have triggerSurpriseReroll function', () => {
+      const { result } = renderHook(() => useThemeStore());
+      const initialVersion = result.current.surpriseVersion;
+
+      act(() => {
+        result.current.triggerSurpriseReroll();
+      });
+
+      expect(result.current.surpriseVersion).toBe(initialVersion + 1);
+    });
   });
 
   describe('getResolvedTheme', () => {
