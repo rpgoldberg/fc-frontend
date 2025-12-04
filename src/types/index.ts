@@ -1,8 +1,11 @@
+export type ColorProfile = 'light' | 'dark' | 'terminal' | 'surprise';
+
 export interface User {
   _id: string;
   username: string;
   email: string;
   isAdmin: boolean;
+  colorProfile?: ColorProfile;
   token?: string;
 }
 

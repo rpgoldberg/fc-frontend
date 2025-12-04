@@ -1,6 +1,6 @@
 {
   "name": "fc-frontend",
-  "version": "2.2.1",
+  "version": "3.0.0",
   "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
@@ -42,8 +42,7 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs",
-      "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.tsx"
+      "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs"
     },
     "testMatch": [
       "<rootDir>/src/**/*.test.{ts,tsx}",

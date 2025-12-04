@@ -1,11 +1,11 @@
 import React from 'react';
 import { IconButton, Tooltip, Icon, ButtonGroup } from '@chakra-ui/react';
-import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { MoonIcon, SunIcon, QuestionIcon } from '@chakra-ui/icons';
 import { FaTerminal } from 'react-icons/fa';
 import { useCustomTheme } from '../hooks/useCustomTheme';
 
 const ThemeToggle: React.FC = () => {
-  const { customTheme, setCustomTheme } = useCustomTheme();
+  const { customTheme, colorProfile, setCustomTheme } = useCustomTheme();
 
   return (
     <ButtonGroup isAttached size="sm" variant="outline">
@@ -14,8 +14,8 @@ const ThemeToggle: React.FC = () => {
           aria-label="Light mode"
           icon={<SunIcon />}
           onClick={() => setCustomTheme('light')}
-          colorScheme={customTheme === 'light' ? 'blue' : 'gray'}
-          variant={customTheme === 'light' ? 'solid' : 'ghost'}
+          colorScheme={colorProfile === 'light' ? 'blue' : 'gray'}
+          variant={colorProfile === 'light' ? 'solid' : 'ghost'}
         />
       </Tooltip>
       <Tooltip label="Dark mode" placement="bottom">
@@ -23,8 +23,8 @@ const ThemeToggle: React.FC = () => {
           aria-label="Dark mode"
           icon={<MoonIcon />}
           onClick={() => setCustomTheme('dark')}
-          colorScheme={customTheme === 'dark' ? 'blue' : 'gray'}
-          variant={customTheme === 'dark' ? 'solid' : 'ghost'}
+          colorScheme={colorProfile === 'dark' ? 'blue' : 'gray'}
+          variant={colorProfile === 'dark' ? 'solid' : 'ghost'}
         />
       </Tooltip>
       <Tooltip label="Terminal mode" placement="bottom">
@@ -32,9 +32,18 @@ const ThemeToggle: React.FC = () => {
           aria-label="Terminal mode"
           icon={<Icon as={FaTerminal} />}
           onClick={() => setCustomTheme('terminal')}
-          colorScheme={customTheme === 'terminal' ? 'green' : 'gray'}
-          variant={customTheme === 'terminal' ? 'solid' : 'ghost'}
+          colorScheme={colorProfile === 'terminal' ? 'green' : 'gray'}
+          variant={colorProfile === 'terminal' ? 'solid' : 'ghost'}
           color={customTheme === 'terminal' ? '#00ff00' : undefined}
+        />
+      </Tooltip>
+      <Tooltip label="Surprise me! (random theme)" placement="bottom">
+        <IconButton
+          aria-label="Surprise mode"
+          icon={<QuestionIcon />}
+          onClick={() => setCustomTheme('surprise')}
+          colorScheme={colorProfile === 'surprise' ? 'purple' : 'gray'}
+          variant={colorProfile === 'surprise' ? 'solid' : 'ghost'}
         />
       </Tooltip>
     </ButtonGroup>
