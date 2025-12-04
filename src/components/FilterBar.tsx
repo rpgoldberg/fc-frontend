@@ -96,52 +96,58 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
           <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
             <FormControl>
               <FormLabel fontSize="sm">Manufacturer</FormLabel>
-              <Select 
-                name="manufacturer" 
-                placeholder="All Manufacturers" 
+              <Select
+                name="manufacturer"
+                placeholder="All Manufacturers"
                 value={filters.manufacturer || ''}
                 onChange={handleInputChange}
                 size="sm"
               >
-                {stats?.manufacturerStats.map(({ _id, count }) => (
-                  <option key={_id} value={_id}>
-                    {_id} ({count})
-                  </option>
-                ))}
+                {stats?.manufacturerStats
+                  .filter(({ _id }) => _id != null && _id !== '')
+                  .map(({ _id, count }) => (
+                    <option key={_id} value={_id}>
+                      {_id} ({count})
+                    </option>
+                  ))}
               </Select>
             </FormControl>
 
             <FormControl>
               <FormLabel fontSize="sm">Scale</FormLabel>
-              <Select 
-                name="scale" 
-                placeholder="All Scales" 
+              <Select
+                name="scale"
+                placeholder="All Scales"
                 value={filters.scale || ''}
                 onChange={handleInputChange}
                 size="sm"
               >
-                {stats?.scaleStats.map(({ _id, count }) => (
-                  <option key={_id} value={_id}>
-                    {_id} ({count})
-                  </option>
-                ))}
+                {stats?.scaleStats
+                  .filter(({ _id }) => _id != null && _id !== '')
+                  .map(({ _id, count }) => (
+                    <option key={_id} value={_id}>
+                      {_id} ({count})
+                    </option>
+                  ))}
               </Select>
             </FormControl>
 
             <FormControl>
               <FormLabel fontSize="sm">Location</FormLabel>
-              <Select 
-                name="location" 
-                placeholder="All Locations" 
+              <Select
+                name="location"
+                placeholder="All Locations"
                 value={filters.location || ''}
                 onChange={handleInputChange}
                 size="sm"
               >
-                {stats?.locationStats.map(({ _id, count }) => (
-                  <option key={_id} value={_id}>
-                    {_id} ({count})
-                  </option>
-                ))}
+                {stats?.locationStats
+                  .filter(({ _id }) => _id != null && _id !== '')
+                  .map(({ _id, count }) => (
+                    <option key={_id} value={_id}>
+                      {_id} ({count})
+                    </option>
+                  ))}
               </Select>
             </FormControl>
 
