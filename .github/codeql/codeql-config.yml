@@ -1,0 +1,16 @@
+name: "CodeQL Configuration for fc-frontend"
+
+# Exclude test files from security analysis since they contain
+# patterns that are false positives (e.g., regex patterns used
+# for DOM element selection, not URL validation)
+paths-ignore:
+  - "**/__tests__/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/setupTests.ts"
+  - "**/testUtils.tsx"
+  - "**/test-utils/**"
+
+# Use default queries plus security-extended
+queries:
+  - uses: security-extended
