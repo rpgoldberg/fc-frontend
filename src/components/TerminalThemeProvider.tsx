@@ -5,6 +5,12 @@ interface TerminalThemeProviderProps {
   children: React.ReactNode;
 }
 
+// Dark mode colors - matches Chakra's gray scale
+const darkModeColors = {
+  bg: '#1A202C', // gray.800
+  text: '#F7FAFC', // gray.50
+};
+
 const TerminalThemeProvider: React.FC<TerminalThemeProviderProps> = ({ children }) => {
   const { customTheme } = useCustomTheme();
 
@@ -16,6 +22,7 @@ const TerminalThemeProvider: React.FC<TerminalThemeProviderProps> = ({ children 
     if (customTheme === 'terminal') {
       // Add terminal class to html element
       htmlElement.classList.add('terminal-theme');
+      htmlElement.classList.remove('dark-theme');
 
       // Set body styles directly
       bodyElement.style.backgroundColor = terminalColors.bg;
@@ -97,9 +104,36 @@ const TerminalThemeProvider: React.FC<TerminalThemeProviderProps> = ({ children 
           }
         `;
       });
-    } else {
-      // Remove terminal class and reset styles
+    } else if (customTheme === 'dark') {
+      // Handle dark mode - set body background since static theme doesn't
       htmlElement.classList.remove('terminal-theme');
+      htmlElement.classList.add('dark-theme');
+
+      bodyElement.style.backgroundColor = darkModeColors.bg;
+      bodyElement.style.color = darkModeColors.text;
+      bodyElement.style.fontFamily = '';
+
+      // Inject minimal dark mode styles
+      let styleTag = document.getElementById(STYLE_ID) as HTMLStyleElement;
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = STYLE_ID;
+        document.head.appendChild(styleTag);
+      }
+
+      requestAnimationFrame(() => {
+        styleTag.textContent = `
+          html.dark-theme,
+          html.dark-theme body,
+          html.dark-theme #root {
+            background-color: ${darkModeColors.bg} !important;
+          }
+        `;
+      });
+    } else {
+      // Light mode - remove all custom styles
+      htmlElement.classList.remove('terminal-theme');
+      htmlElement.classList.remove('dark-theme');
       bodyElement.style.backgroundColor = '';
       bodyElement.style.color = '';
       bodyElement.style.fontFamily = '';
@@ -114,6 +148,7 @@ const TerminalThemeProvider: React.FC<TerminalThemeProviderProps> = ({ children 
     // Cleanup on unmount
     return () => {
       htmlElement.classList.remove('terminal-theme');
+      htmlElement.classList.remove('dark-theme');
       const styleTag = document.getElementById(STYLE_ID);
       if (styleTag) {
         styleTag.remove();
