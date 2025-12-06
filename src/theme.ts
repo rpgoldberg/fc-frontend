@@ -51,6 +51,27 @@ const theme = extendTheme({
       defaultProps: {
         colorScheme: 'brand',
       },
+      variants: {
+        solid: (props: StyleFunctionProps) => {
+          // Fix contrast for brand colorScheme in dark mode
+          if (props.colorScheme === 'brand') {
+            return {
+              bg: mode('brand.500', 'brand.400')(props),
+              color: mode('white', 'gray.900')(props),
+              _hover: {
+                bg: mode('brand.600', 'brand.300')(props),
+                _disabled: {
+                  bg: mode('brand.500', 'brand.400')(props),
+                },
+              },
+              _active: {
+                bg: mode('brand.700', 'brand.200')(props),
+              },
+            };
+          }
+          return {};
+        },
+      },
     },
     Input: {
       variants: {

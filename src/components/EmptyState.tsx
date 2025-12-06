@@ -6,11 +6,13 @@ import { Link as RouterLink } from 'react-router-dom';
 interface EmptyStateProps {
   type: 'collection' | 'search' | 'filter';
   message?: string;
+  onClearFilters?: () => void;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
   type,
-  message
+  message,
+  onClearFilters
 }) => {
   const emptyStateBg = useColorModeValue('white', 'gray.800');
 
@@ -46,7 +48,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           button: {
             text: 'Clear Filters',
             icon: FaTimes,
-            onclick: () => window.location.href = '/figures'
+            onclick: onClearFilters || (() => window.location.href = '/figures')
           }
         };
       default:

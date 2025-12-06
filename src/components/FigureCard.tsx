@@ -36,10 +36,14 @@ const HighlightedText: React.FC<{ text: string; query?: string; color?: string }
           <Box
             key={index}
             as="mark"
-            bg={color}
+            display="inline"
             px={0.5}
             borderRadius="sm"
-            color="inherit"
+            sx={{
+              // Override browser default mark styles with !important
+              background: `var(--chakra-colors-${color.replace('.', '-')}) !important`,
+              color: 'inherit',
+            }}
           >
             {part}
           </Box>
@@ -100,23 +104,30 @@ const FigureCard: React.FC<FigureCardProps> = ({ figure, searchQuery }) => {
       transition="all 0.3s"
       _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }}
     >
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        h="200px"
-        bg={imageBg}
-        overflow="hidden"
+      <Link
+        as={RouterLink}
+        to={`/figures/${figure._id}`}
+        display="block"
+        cursor="pointer"
       >
-        <Image
-          src={figure.imageUrl || '/placeholder-figure.png'}
-          alt={figure.name}
-          maxH="100%"
-          maxW="100%"
-          objectFit="contain"
-          fallbackSrc="https://via.placeholder.com/300x200?text=No+Image"
-        />
-      </Box>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          h="200px"
+          bg={imageBg}
+          overflow="hidden"
+        >
+          <Image
+            src={figure.imageUrl || '/placeholder-figure.png'}
+            alt={figure.name}
+            maxH="100%"
+            maxW="100%"
+            objectFit="contain"
+            fallbackSrc="https://via.placeholder.com/300x200?text=No+Image"
+          />
+        </Box>
+      </Link>
 
       <Box p={4}>
         {figure.mfcLink && (
