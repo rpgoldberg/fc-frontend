@@ -29,10 +29,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const App: React.FC = () => {
-  const { customTheme } = useCustomTheme();
+  const { colorProfile } = useCustomTheme();
 
   return (
-    <TerminalThemeProvider key={customTheme}>
+    <TerminalThemeProvider key={colorProfile}>
       <Box>
         <Routes>
           <Route path="/login" element={<Login />} />

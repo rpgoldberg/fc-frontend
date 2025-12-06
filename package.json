@@ -1,6 +1,6 @@
 {
   "name": "fc-frontend",
-  "version": "2.2.1",
+  "version": "3.0.1",
   "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
@@ -17,7 +17,7 @@
     "react-markdown": "^10.1.0",
     "react-query": "^3.39.3",
     "react-router-dom": "^6.16.0",
-    "web-vitals": "^2.1.4",
+    "web-vitals": "^5.1.0",
     "zustand": "^5.0.8"
   },
   "scripts": {
@@ -42,8 +42,7 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs",
-      "^react-markdown$": "<rootDir>/src/__mocks__/react-markdown.tsx"
+      "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs"
     },
     "testMatch": [
       "<rootDir>/src/**/*.test.{ts,tsx}",
@@ -64,7 +63,8 @@
   },
   "overrides": {
     "nth-check": "^2.1.1",
-    "postcss": "^8.4.31"
+    "postcss": "^8.4.31",
+    "webpack-dev-server": "^5.2.1"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.28.3",
@@ -87,7 +87,7 @@
     "babel-plugin-transform-import-meta": "^2.3.3",
     "http-proxy-middleware": "^3.0.5",
     "identity-obj-proxy": "^3.0.0",
-    "jest-axe": "^6.0.1",
+    "jest-axe": "^10.0.0",
     "jest-canvas-mock": "^2.5.2",
     "jest-environment-jsdom": "^30.2.0",
     "jest-junit": "^16.0.0",

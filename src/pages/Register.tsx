@@ -102,6 +102,7 @@ const Register: React.FC = () => {
   return (
     <Flex minH="100vh" align="center" justify="center" bg={pageBg}>
       <Box
+        data-testid="auth-card"
         bg={cardBg}
         p={8}
         rounded="lg"

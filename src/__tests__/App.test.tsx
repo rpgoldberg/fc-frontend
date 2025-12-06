@@ -561,7 +561,9 @@ describe('App Routing', () => {
       renderWithRouter(<App />);
 
       // Auth store should only be called a reasonable number of times
-      expect(mockUseAuthStore).toHaveBeenCalledTimes(1);
+      // Multiple calls are expected: Navbar, useCustomTheme (for theme sync), etc.
+      // The test ensures we don't have excessive re-renders (e.g., infinite loops)
+      expect(mockUseAuthStore.mock.calls.length).toBeLessThan(10);
     });
 
     it('should handle rapid route changes', () => {

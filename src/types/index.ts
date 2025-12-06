@@ -1,8 +1,11 @@
+export type ColorProfile = 'light' | 'dark' | 'terminal' | 'tokyonight' | 'nord' | 'dracula' | 'solarized' | 'cyberpunk';
+
 export interface User {
   _id: string;
   username: string;
   email: string;
   isAdmin: boolean;
+  colorProfile?: ColorProfile;
   token?: string;
 }
 

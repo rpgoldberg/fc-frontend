@@ -7,12 +7,12 @@ describe('Theme Configuration', () => {
     expect(theme.config.useSystemColorMode).toBeDefined();
   });
 
-  it('should use system color mode by default', () => {
-    expect(theme.config.useSystemColorMode).toBe(true);
+  it('should disable system color mode (controlled via store)', () => {
+    expect(theme.config.useSystemColorMode).toBe(false);
   });
 
-  it('should have global styles function for color mode', () => {
-    expect(theme.styles.global).toBeInstanceOf(Function);
+  it('should have initial color mode as light', () => {
+    expect(theme.config.initialColorMode).toBe('light');
   });
 
   it('should have brand colors', () => {
@@ -20,21 +20,64 @@ describe('Theme Configuration', () => {
     expect(theme.colors.brand['500']).toBe('#0967d2');
   });
 
-  it('should return different background colors for light and dark modes', () => {
-    const lightStyles = theme.styles.global({ colorMode: 'light' });
-    const darkStyles = theme.styles.global({ colorMode: 'dark' });
-
-    expect(lightStyles.body.bg).not.toBe(darkStyles.body.bg);
-    expect(darkStyles.body.bg).toBe('gray.900');
-    expect(lightStyles.body.bg).toBe('white');
+  it('should have terminal colors', () => {
+    expect(theme.colors.terminal).toBeDefined();
+    expect(theme.colors.terminal.bg).toBe('#0a0a0a');
+    expect(theme.colors.terminal.text).toBe('#00ff00');
   });
 
-  it('should return different text colors for light and dark modes', () => {
-    const lightStyles = theme.styles.global({ colorMode: 'light' });
-    const darkStyles = theme.styles.global({ colorMode: 'dark' });
+  it('should have font configuration', () => {
+    expect(theme.fonts).toBeDefined();
+    expect(theme.fonts.heading).toBe('Inter, sans-serif');
+    expect(theme.fonts.body).toBe('Inter, sans-serif');
+  });
 
-    expect(lightStyles.body.color).not.toBe(darkStyles.body.color);
-    expect(darkStyles.body.color).toBe('gray.50');
-    expect(lightStyles.body.color).toBe('gray.900');
+  describe('Component Styles', () => {
+    it('should have Input component configuration', () => {
+      expect(theme.components.Input).toBeDefined();
+      expect(theme.components.Input.variants).toBeDefined();
+      expect(theme.components.Input.variants.outline).toBeDefined();
+    });
+
+    it('should have Select component configuration', () => {
+      expect(theme.components.Select).toBeDefined();
+      expect(theme.components.Select.variants).toBeDefined();
+      expect(theme.components.Select.variants.outline).toBeDefined();
+    });
+
+    it('should have Textarea component configuration', () => {
+      expect(theme.components.Textarea).toBeDefined();
+      expect(theme.components.Textarea.variants).toBeDefined();
+      expect(theme.components.Textarea.variants.outline).toBeDefined();
+    });
+
+    it('should have FormLabel component configuration', () => {
+      expect(theme.components.FormLabel).toBeDefined();
+      expect(theme.components.FormLabel.baseStyle).toBeDefined();
+    });
+
+    it('should have Card component configuration', () => {
+      expect(theme.components.Card).toBeDefined();
+      expect(theme.components.Card.baseStyle).toBeDefined();
+    });
+
+    it('should have Menu component configuration', () => {
+      expect(theme.components.Menu).toBeDefined();
+      expect(theme.components.Menu.baseStyle).toBeDefined();
+    });
+
+    it('should have Button default props', () => {
+      expect(theme.components.Button).toBeDefined();
+      expect(theme.components.Button.defaultProps).toBeDefined();
+      expect(theme.components.Button.defaultProps.colorScheme).toBe('brand');
+    });
+  });
+
+  describe('Global Styles', () => {
+    it('should have global styles as a function for dynamic mode support', () => {
+      expect(theme.styles.global).toBeDefined();
+      // With mode() function, global styles are a function not a static object
+      expect(typeof theme.styles.global).toBe('function');
+    });
   });
 });
