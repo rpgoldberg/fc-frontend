@@ -95,7 +95,7 @@ const FigureList: React.FC = () => {
       
       {data?.total === 0 ? (
         Object.keys(filters).length > 0 ? (
-          <EmptyState type="filter" />
+          <EmptyState type="filter" onClearFilters={() => handleFilterChange({})} />
         ) : (
           <EmptyState type="collection" />
         )

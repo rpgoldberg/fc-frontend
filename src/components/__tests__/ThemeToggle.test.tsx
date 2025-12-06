@@ -1,10 +1,15 @@
 import React from 'react';
-import { render, screen } from '../../test-utils';
+import { render, screen, waitFor } from '../../test-utils';
 import { fireEvent } from '@testing-library/react';
 import ThemeToggle from '../ThemeToggle';
 import { ChakraProvider } from '@chakra-ui/react';
 import theme from '../../theme';
 import { act } from 'react-dom/test-utils';
+
+// Mock scrollTo for Chakra Menu
+beforeAll(() => {
+  Element.prototype.scrollTo = jest.fn();
+});
 
 // Wrapper with Chakra provider for proper theme context
 const ThemeWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -17,66 +22,130 @@ describe('ThemeToggle', () => {
     jest.clearAllMocks();
   });
 
-  it('should render three theme buttons', () => {
+  it('should render theme selector button', () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    expect(screen.getByRole('button', { name: /light mode/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /dark mode/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /terminal mode/i })).toBeInTheDocument();
+    // Should have a menu button showing current theme
+    const menuButton = screen.getByRole('button');
+    expect(menuButton).toBeInTheDocument();
   });
 
-  it('should have accessible labels on all buttons', () => {
+  it('should display current theme label in button', () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const lightButton = screen.getByRole('button', { name: /light mode/i });
-    const darkButton = screen.getByRole('button', { name: /dark mode/i });
-    const terminalButton = screen.getByRole('button', { name: /terminal mode/i });
-
-    expect(lightButton).toHaveAttribute('aria-label', 'Light mode');
-    expect(darkButton).toHaveAttribute('aria-label', 'Dark mode');
-    expect(terminalButton).toHaveAttribute('aria-label', 'Terminal mode');
+    // Default theme is 'light' - the button should contain the text
+    const menuButton = screen.getByRole('button');
+    expect(menuButton).toHaveTextContent('Light');
   });
 
-  it('should switch to dark mode when dark button is clicked', () => {
+  it('should open menu when button is clicked', async () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const darkButton = screen.getByRole('button', { name: /dark mode/i });
+    const menuButton = screen.getByRole('button');
 
     act(() => {
-      fireEvent.click(darkButton);
+      fireEvent.click(menuButton);
     });
 
-    // After clicking, the component should still be rendered
-    expect(darkButton).toBeInTheDocument();
+    // Menu should show all theme options
+    await waitFor(() => {
+      expect(screen.getByText('Dark')).toBeInTheDocument();
+      expect(screen.getByText('Terminal')).toBeInTheDocument();
+      expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
+      expect(screen.getByText('Nord')).toBeInTheDocument();
+      expect(screen.getByText('Dracula')).toBeInTheDocument();
+      expect(screen.getByText('Solarized')).toBeInTheDocument();
+      expect(screen.getByText('Cyberpunk')).toBeInTheDocument();
+    });
   });
 
-  it('should switch to terminal mode when terminal button is clicked', () => {
+  it('should show theme descriptions in menu', async () => {
     render(
       <ThemeWrapper>
         <ThemeToggle />
       </ThemeWrapper>
     );
 
-    const terminalButton = screen.getByRole('button', { name: /terminal mode/i });
+    const menuButton = screen.getByRole('button');
 
     act(() => {
-      fireEvent.click(terminalButton);
+      fireEvent.click(menuButton);
     });
 
-    // After clicking, the component should still be rendered
-    expect(terminalButton).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Easy on the eyes')).toBeInTheDocument();
+      expect(screen.getByText('Downtown Tokyo at night')).toBeInTheDocument();
+    });
+  });
+
+  it('should switch to dark mode when selected from menu', async () => {
+    render(
+      <ThemeWrapper>
+        <ThemeToggle />
+      </ThemeWrapper>
+    );
+
+    const menuButton = screen.getByRole('button');
+
+    act(() => {
+      fireEvent.click(menuButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Easy on the eyes')).toBeInTheDocument();
+    });
+
+    // Find and click the Dark menu item
+    const darkOption = screen.getByText('Dark').closest('button');
+    expect(darkOption).toBeInTheDocument();
+
+    await act(async () => {
+      if (darkOption) fireEvent.click(darkOption);
+    });
+
+    // localStorage should have been called to save preference
+    expect(localStorage.setItem).toHaveBeenCalled();
+  });
+
+  it('should switch to terminal mode when selected from menu', async () => {
+    render(
+      <ThemeWrapper>
+        <ThemeToggle />
+      </ThemeWrapper>
+    );
+
+    const menuButton = screen.getByRole('button');
+
+    act(() => {
+      fireEvent.click(menuButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Retro CRT with scanlines')).toBeInTheDocument();
+    });
+
+    // Find and click the Terminal menu item
+    const terminalOption = screen.getByText('Terminal').closest('button');
+    expect(terminalOption).toBeInTheDocument();
+
+    await act(async () => {
+      if (terminalOption) fireEvent.click(terminalOption);
+    });
+
+    // localStorage should have been called to save preference
+    expect(localStorage.setItem).toHaveBeenCalled();
   });
 
   it('should be keyboard accessible', () => {
@@ -86,46 +155,21 @@ describe('ThemeToggle', () => {
       </ThemeWrapper>
     );
 
-    const lightButton = screen.getByRole('button', { name: /light mode/i });
-    const darkButton = screen.getByRole('button', { name: /dark mode/i });
-    const terminalButton = screen.getByRole('button', { name: /terminal mode/i });
-
-    // All buttons should have type="button"
-    expect(lightButton).toHaveAttribute('type', 'button');
-    expect(darkButton).toHaveAttribute('type', 'button');
-    expect(terminalButton).toHaveAttribute('type', 'button');
-  });
-
-  it('should save preference to localStorage when theme is changed', () => {
-    render(
-      <ThemeWrapper>
-        <ThemeToggle />
-      </ThemeWrapper>
-    );
-
-    const darkButton = screen.getByRole('button', { name: /dark mode/i });
-
-    act(() => {
-      fireEvent.click(darkButton);
-    });
-
-    // localStorage should have been called
-    expect(localStorage.setItem).toHaveBeenCalled();
+    const menuButton = screen.getByRole('button');
+    expect(menuButton).toHaveAttribute('type', 'button');
   });
 
   describe('accessibility', () => {
-    it('should have proper ARIA attributes on all buttons', () => {
+    it('should have proper ARIA attributes on menu button', () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
         </ThemeWrapper>
       );
 
-      const buttons = screen.getAllByRole('button');
-      buttons.forEach((button) => {
-        expect(button).toHaveAttribute('aria-label');
-        expect(button).toHaveAttribute('type', 'button');
-      });
+      const menuButton = screen.getByRole('button');
+      expect(menuButton).toHaveAttribute('type', 'button');
+      expect(menuButton).toHaveAttribute('aria-expanded');
     });
 
     it('should be focusable', () => {
@@ -135,9 +179,29 @@ describe('ThemeToggle', () => {
         </ThemeWrapper>
       );
 
-      const lightButton = screen.getByRole('button', { name: /light mode/i });
-      lightButton.focus();
-      expect(lightButton).toHaveFocus();
+      const menuButton = screen.getByRole('button');
+      menuButton.focus();
+      expect(menuButton).toHaveFocus();
+    });
+
+    it('should have all 8 theme options', async () => {
+      render(
+        <ThemeWrapper>
+          <ThemeToggle />
+        </ThemeWrapper>
+      );
+
+      const menuButton = screen.getByRole('button');
+
+      act(() => {
+        fireEvent.click(menuButton);
+      });
+
+      await waitFor(() => {
+        // Verify all 8 themes are available
+        const menuItems = screen.getAllByRole('menuitem');
+        expect(menuItems).toHaveLength(8);
+      });
     });
   });
 });

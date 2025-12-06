@@ -111,6 +111,7 @@ const Search: React.FC = () => {
                   createdAt: '',
                   updatedAt: '',
                 }}
+                searchQuery={searchQuery}
               />
             ))}
           </SimpleGrid>
