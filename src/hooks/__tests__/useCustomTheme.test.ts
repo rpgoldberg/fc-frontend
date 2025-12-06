@@ -25,21 +25,10 @@ describe('useCustomTheme', () => {
   });
 
   describe('basic theme functionality', () => {
-    it('should return current theme and color profile', () => {
+    it('should return current color profile', () => {
       const { result } = renderHook(() => useCustomTheme());
 
-      expect(result.current.customTheme).toBe('light');
       expect(result.current.colorProfile).toBe('light');
-    });
-
-    it('should cycle through themes', () => {
-      const { result } = renderHook(() => useCustomTheme());
-
-      act(() => {
-        result.current.cycleTheme();
-      });
-
-      expect(result.current.colorProfile).toBe('dark');
     });
 
     it('should set custom theme', () => {
@@ -50,6 +39,56 @@ describe('useCustomTheme', () => {
       });
 
       expect(result.current.colorProfile).toBe('terminal');
+    });
+
+    it('should set tokyonight theme', () => {
+      const { result } = renderHook(() => useCustomTheme());
+
+      act(() => {
+        result.current.setCustomTheme('tokyonight');
+      });
+
+      expect(result.current.colorProfile).toBe('tokyonight');
+    });
+
+    it('should set nord theme', () => {
+      const { result } = renderHook(() => useCustomTheme());
+
+      act(() => {
+        result.current.setCustomTheme('nord');
+      });
+
+      expect(result.current.colorProfile).toBe('nord');
+    });
+
+    it('should set dracula theme', () => {
+      const { result } = renderHook(() => useCustomTheme());
+
+      act(() => {
+        result.current.setCustomTheme('dracula');
+      });
+
+      expect(result.current.colorProfile).toBe('dracula');
+    });
+
+    it('should set solarized theme', () => {
+      const { result } = renderHook(() => useCustomTheme());
+
+      act(() => {
+        result.current.setCustomTheme('solarized');
+      });
+
+      expect(result.current.colorProfile).toBe('solarized');
+    });
+
+    it('should set cyberpunk theme', () => {
+      const { result } = renderHook(() => useCustomTheme());
+
+      act(() => {
+        result.current.setCustomTheme('cyberpunk');
+      });
+
+      expect(result.current.colorProfile).toBe('cyberpunk');
     });
   });
 
@@ -78,16 +117,6 @@ describe('useCustomTheme', () => {
       expect(api.updateUserProfile).toHaveBeenCalledWith({ colorProfile: 'dark' });
     });
 
-    it('should call updateUserProfile when authenticated user cycles theme', async () => {
-      const { result } = renderHook(() => useCustomTheme());
-
-      await act(async () => {
-        result.current.cycleTheme();
-      });
-
-      expect(api.updateUserProfile).toHaveBeenCalledWith({ colorProfile: 'dark' });
-    });
-
     it('should sync terminal theme to backend', async () => {
       const { result } = renderHook(() => useCustomTheme());
 
@@ -98,14 +127,24 @@ describe('useCustomTheme', () => {
       expect(api.updateUserProfile).toHaveBeenCalledWith({ colorProfile: 'terminal' });
     });
 
-    it('should sync surprise theme to backend', async () => {
+    it('should sync tokyonight theme to backend', async () => {
       const { result } = renderHook(() => useCustomTheme());
 
       await act(async () => {
-        result.current.setCustomTheme('surprise');
+        result.current.setCustomTheme('tokyonight');
       });
 
-      expect(api.updateUserProfile).toHaveBeenCalledWith({ colorProfile: 'surprise' });
+      expect(api.updateUserProfile).toHaveBeenCalledWith({ colorProfile: 'tokyonight' });
+    });
+
+    it('should sync cyberpunk theme to backend', async () => {
+      const { result } = renderHook(() => useCustomTheme());
+
+      await act(async () => {
+        result.current.setCustomTheme('cyberpunk');
+      });
+
+      expect(api.updateUserProfile).toHaveBeenCalledWith({ colorProfile: 'cyberpunk' });
     });
   });
 

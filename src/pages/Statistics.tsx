@@ -4,7 +4,6 @@ import {
   Box,
   Heading,
   SimpleGrid,
-  Text,
   Spinner,
   Center,
   Stat,
@@ -22,29 +21,13 @@ import {
   TableContainer,
   Divider,
   useColorModeValue,
-  Tooltip,
+  Text,
 } from '@chakra-ui/react';
 import { FaDownload } from 'react-icons/fa';
 import { getFigureStats } from '../api';
 
-// Helper component for truncated text with tooltip
-const TruncatedCell: React.FC<{ children: string; maxW?: string }> = ({ children, maxW = '200px' }) => (
-  <Tooltip label={children} placement="top" hasArrow openDelay={500}>
-    <Text
-      maxW={maxW}
-      whiteSpace="nowrap"
-      overflow="hidden"
-      textOverflow="ellipsis"
-      cursor="default"
-    >
-      {children}
-    </Text>
-  </Tooltip>
-);
-
 const Statistics: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
   const labelColor = useColorModeValue('gray.600', 'gray.300');
   const helpTextColor = useColorModeValue('gray.500', 'gray.400');
   const headingColor = useColorModeValue('gray.700', 'gray.100');
@@ -153,26 +136,25 @@ const Statistics: React.FC = () => {
         </Stat>
       </SimpleGrid>
       
-      <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} spacing={6}>
-        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg" minH="200px">
+      {/* Stacked layout for tables - full width for better readability */}
+      <Box display="flex" flexDirection="column" gap={6}>
+        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg">
           <Heading size="md" mb={4} color={headingColor}>Manufacturers</Heading>
           <Divider mb={4} />
 
-          <TableContainer maxH="400px" overflowY="auto">
-            <Table variant="simple">
+          <TableContainer maxH="350px" overflowY="auto">
+            <Table variant="simple" size="sm">
               <Thead position="sticky" top={0} bg={cardBg} zIndex={1}>
                 <Tr>
-                  <Th minW="120px">Manufacturer</Th>
-                  <Th isNumeric minW="60px">Count</Th>
-                  <Th isNumeric minW="80px">%</Th>
+                  <Th>Manufacturer</Th>
+                  <Th isNumeric>Count</Th>
+                  <Th isNumeric>%</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {stats.manufacturerStats.map((stat) => (
                   <Tr key={stat._id}>
-                    <Td>
-                      <TruncatedCell maxW="180px">{stat._id || 'Unknown'}</TruncatedCell>
-                    </Td>
+                    <Td>{stat._id || 'Unknown'}</Td>
                     <Td isNumeric fontWeight="medium">{stat.count}</Td>
                     <Td isNumeric color="gray.500">
                       {((stat.count / stats.totalCount) * 100).toFixed(1)}%
@@ -184,17 +166,17 @@ const Statistics: React.FC = () => {
           </TableContainer>
         </Box>
 
-        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg" minH="200px">
+        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg">
           <Heading size="md" mb={4} color={headingColor}>Scales</Heading>
           <Divider mb={4} />
 
-          <TableContainer maxH="400px" overflowY="auto">
-            <Table variant="simple">
+          <TableContainer maxH="350px" overflowY="auto">
+            <Table variant="simple" size="sm">
               <Thead position="sticky" top={0} bg={cardBg} zIndex={1}>
                 <Tr>
-                  <Th minW="80px">Scale</Th>
-                  <Th isNumeric minW="60px">Count</Th>
-                  <Th isNumeric minW="80px">%</Th>
+                  <Th>Scale</Th>
+                  <Th isNumeric>Count</Th>
+                  <Th isNumeric>%</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -212,25 +194,23 @@ const Statistics: React.FC = () => {
           </TableContainer>
         </Box>
 
-        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg" minH="200px">
+        <Box bg={cardBg} p={6} shadow="sm" borderRadius="lg">
           <Heading size="md" mb={4} color={headingColor}>Storage Locations</Heading>
           <Divider mb={4} />
 
-          <TableContainer maxH="400px" overflowY="auto">
-            <Table variant="simple">
+          <TableContainer maxH="350px" overflowY="auto">
+            <Table variant="simple" size="sm">
               <Thead position="sticky" top={0} bg={cardBg} zIndex={1}>
                 <Tr>
-                  <Th minW="100px">Location</Th>
-                  <Th isNumeric minW="60px">Count</Th>
-                  <Th isNumeric minW="80px">%</Th>
+                  <Th>Location</Th>
+                  <Th isNumeric>Count</Th>
+                  <Th isNumeric>%</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {stats.locationStats.map((stat) => (
                   <Tr key={stat._id}>
-                    <Td>
-                      <TruncatedCell maxW="150px">{stat._id || 'Unknown'}</TruncatedCell>
-                    </Td>
+                    <Td>{stat._id || 'Unknown'}</Td>
                     <Td isNumeric fontWeight="medium">{stat.count}</Td>
                     <Td isNumeric color="gray.500">
                       {((stat.count / stats.totalCount) * 100).toFixed(1)}%
@@ -241,7 +221,7 @@ const Statistics: React.FC = () => {
             </Table>
           </TableContainer>
         </Box>
-      </SimpleGrid>
+      </Box>
     </Box>
   );
 };

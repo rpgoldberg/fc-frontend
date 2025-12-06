@@ -1,5 +1,6 @@
 import { extendTheme, type ThemeConfig } from '@chakra-ui/react';
-import { ResolvedTheme } from './stores/themeStore';
+import { mode } from '@chakra-ui/theme-tools';
+import type { StyleFunctionProps } from '@chakra-ui/styled-system';
 
 const config: ThemeConfig = {
   initialColorMode: 'light',
@@ -16,133 +17,123 @@ const terminalColors = {
   highlight: '#003300',
 };
 
-// Create theme based on resolved theme type
-export const createTheme = (resolvedTheme: ResolvedTheme) => {
-  const isTerminal = resolvedTheme === 'terminal';
-  const isDark = resolvedTheme === 'dark' || isTerminal;
-
-  return extendTheme({
-    config: {
-      ...config,
-      initialColorMode: isDark ? 'dark' : 'light',
+const theme = extendTheme({
+  config,
+  colors: {
+    brand: {
+      50: '#e6f7ff',
+      100: '#bae3ff',
+      200: '#7cc4fa',
+      300: '#47a3f3',
+      400: '#2186eb',
+      500: '#0967d2',
+      600: '#0552b5',
+      700: '#03449e',
+      800: '#01337d',
+      900: '#002159',
     },
-    colors: {
-      brand: {
-        50: isTerminal ? '#003300' : '#e6f7ff',
-        100: isTerminal ? '#004400' : '#bae3ff',
-        200: isTerminal ? '#005500' : '#7cc4fa',
-        300: isTerminal ? '#006600' : '#47a3f3',
-        400: isTerminal ? '#008800' : '#2186eb',
-        500: isTerminal ? '#00aa00' : '#0967d2',
-        600: isTerminal ? '#00cc00' : '#0552b5',
-        700: isTerminal ? '#00dd00' : '#03449e',
-        800: isTerminal ? '#00ee00' : '#01337d',
-        900: isTerminal ? '#00ff00' : '#002159',
+    terminal: terminalColors,
+  },
+  fonts: {
+    heading: 'Inter, sans-serif',
+    body: 'Inter, sans-serif',
+  },
+  styles: {
+    global: (props: StyleFunctionProps) => ({
+      body: {
+        bg: mode('white', 'gray.800')(props),
+        color: mode('gray.900', 'gray.100')(props),
       },
-      terminal: terminalColors,
-    },
-    fonts: {
-      heading: isTerminal ? '"Courier New", Courier, monospace' : 'Inter, sans-serif',
-      body: isTerminal ? '"Courier New", Courier, monospace' : 'Inter, sans-serif',
-    },
-    styles: {
-      global: {
-        body: {
-          bg: isTerminal ? terminalColors.bg : (isDark ? 'gray.900' : 'white'),
-          color: isTerminal ? terminalColors.text : (isDark ? 'gray.50' : 'gray.900'),
-        },
-        '*::selection': isTerminal ? {
-          bg: terminalColors.text,
-          color: terminalColors.bg,
-        } : {},
+    }),
+  },
+  components: {
+    Button: {
+      defaultProps: {
+        colorScheme: 'brand',
       },
     },
-    components: {
-      Button: {
-        defaultProps: {
-          colorScheme: 'brand',
-        },
-        variants: isTerminal ? {
-          solid: {
-            bg: terminalColors.text,
-            color: terminalColors.bg,
-            _hover: {
-              bg: terminalColors.accent,
-            },
-          },
-          outline: {
-            borderColor: terminalColors.text,
-            color: terminalColors.text,
-            _hover: {
-              bg: terminalColors.highlight,
-            },
-          },
-        } : {},
-      },
-      Card: isTerminal ? {
-        baseStyle: {
-          container: {
-            bg: terminalColors.highlight,
-            borderColor: terminalColors.border,
-            borderWidth: '1px',
-          },
-        },
-      } : {},
-      Input: isTerminal ? {
-        variants: {
-          outline: {
-            field: {
-              borderColor: terminalColors.border,
-              bg: terminalColors.bg,
-              color: terminalColors.text,
-              _focus: {
-                borderColor: terminalColors.text,
-                boxShadow: `0 0 0 1px ${terminalColors.text}`,
-              },
-              _placeholder: {
-                color: terminalColors.textDim,
-              },
-            },
-          },
-        },
-      } : {},
-      Select: isTerminal ? {
-        variants: {
-          outline: {
-            field: {
-              borderColor: terminalColors.border,
-              bg: terminalColors.bg,
-              color: terminalColors.text,
-              _focus: {
-                borderColor: terminalColors.text,
-              },
-            },
-          },
-        },
-      } : {},
-      Menu: isTerminal ? {
-        baseStyle: {
-          list: {
-            bg: terminalColors.bg,
-            borderColor: terminalColors.border,
-          },
-          item: {
-            bg: terminalColors.bg,
-            color: terminalColors.text,
-            _hover: {
-              bg: terminalColors.highlight,
-            },
+    Input: {
+      variants: {
+        outline: (props: StyleFunctionProps) => ({
+          field: {
+            bg: mode('white', 'gray.700')(props),
+            borderColor: mode('gray.200', 'gray.600')(props),
+            color: mode('gray.900', 'gray.100')(props),
             _focus: {
-              bg: terminalColors.highlight,
+              borderColor: mode('blue.500', 'blue.300')(props),
+              boxShadow: mode(
+                '0 0 0 1px var(--chakra-colors-blue-500)',
+                '0 0 0 1px var(--chakra-colors-blue-300)'
+              )(props),
+            },
+            _placeholder: {
+              color: mode('gray.500', 'gray.400')(props),
             },
           },
-        },
-      } : {},
+        }),
+      },
     },
-  });
-};
-
-// Default theme (light mode)
-const theme = createTheme('light');
+    Select: {
+      variants: {
+        outline: (props: StyleFunctionProps) => ({
+          field: {
+            bg: mode('white', 'gray.700')(props),
+            borderColor: mode('gray.200', 'gray.600')(props),
+            color: mode('gray.900', 'gray.100')(props),
+            _focus: {
+              borderColor: mode('blue.500', 'blue.300')(props),
+            },
+          },
+        }),
+      },
+    },
+    Textarea: {
+      variants: {
+        outline: (props: StyleFunctionProps) => ({
+          bg: mode('white', 'gray.700')(props),
+          borderColor: mode('gray.200', 'gray.600')(props),
+          color: mode('gray.900', 'gray.100')(props),
+          _focus: {
+            borderColor: mode('blue.500', 'blue.300')(props),
+          },
+          _placeholder: {
+            color: mode('gray.500', 'gray.400')(props),
+          },
+        }),
+      },
+    },
+    FormLabel: {
+      baseStyle: (props: StyleFunctionProps) => ({
+        color: mode('gray.700', 'gray.200')(props),
+      }),
+    },
+    Card: {
+      baseStyle: (props: StyleFunctionProps) => ({
+        container: {
+          bg: mode('white', 'gray.700')(props),
+          borderColor: mode('gray.200', 'gray.600')(props),
+        },
+      }),
+    },
+    Menu: {
+      baseStyle: (props: StyleFunctionProps) => ({
+        list: {
+          bg: mode('white', 'gray.700')(props),
+          borderColor: mode('gray.200', 'gray.600')(props),
+        },
+        item: {
+          bg: mode('white', 'gray.700')(props),
+          color: mode('gray.800', 'gray.100')(props),
+          _hover: {
+            bg: mode('gray.100', 'gray.600')(props),
+          },
+          _focus: {
+            bg: mode('gray.100', 'gray.600')(props),
+          },
+        },
+      }),
+    },
+  },
+});
 
 export default theme;

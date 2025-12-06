@@ -40,6 +40,7 @@ const Sidebar: React.FC = () => {
   return (
     <Box
       as="aside"
+      data-testid="sidebar"
       height="100%"
       borderRight={{ base: 'none', md: '1px solid' }}
       borderColor={{ base: 'transparent', md: 'gray.200' }}

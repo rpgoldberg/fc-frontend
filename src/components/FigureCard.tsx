@@ -8,9 +8,50 @@ import { useMutation, useQueryClient } from 'react-query';
 
 interface FigureCardProps {
   figure: Figure;
+  searchQuery?: string;
 }
 
-const FigureCard: React.FC<FigureCardProps> = ({ figure }) => {
+// Helper component to highlight matching text
+const HighlightedText: React.FC<{ text: string; query?: string; color?: string }> = ({
+  text,
+  query,
+  color = 'yellow.200'
+}) => {
+  if (!query || !text) return <>{text}</>;
+
+  const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+  if (terms.length === 0) return <>{text}</>;
+
+  // Build a regex that matches any of the search terms (case-insensitive)
+  const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedTerms.join('|')})`, 'gi');
+
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        const isMatch = terms.some(term => part.toLowerCase() === term);
+        return isMatch ? (
+          <Box
+            key={index}
+            as="mark"
+            bg={color}
+            px={0.5}
+            borderRadius="sm"
+            color="inherit"
+          >
+            {part}
+          </Box>
+        ) : (
+          <React.Fragment key={index}>{part}</React.Fragment>
+        );
+      })}
+    </>
+  );
+};
+
+const FigureCard: React.FC<FigureCardProps> = ({ figure, searchQuery }) => {
   const toast = useToast();
   const queryClient = useQueryClient();
 
@@ -101,17 +142,17 @@ const FigureCard: React.FC<FigureCardProps> = ({ figure }) => {
           noOfLines={1}
           mb={1}
         >
-          {figure.name}
+          <HighlightedText text={figure.name} query={searchQuery} />
         </Link>
         <Text fontSize="sm" color="gray.600" mb={2}>
-          {figure.manufacturer}
+          <HighlightedText text={figure.manufacturer || ''} query={searchQuery} />
         </Text>
         <Badge colorScheme="brand" mb={2}>
           {figure.scale}
         </Badge>
 
         <Text fontSize="xs" color="gray.500">
-          Location: {figure.location} (Box {figure.boxNumber})
+          Location: <HighlightedText text={figure.location || ''} query={searchQuery} /> (Box {figure.boxNumber})
         </Text>
 
         <Flex mt={4} justify="space-between">

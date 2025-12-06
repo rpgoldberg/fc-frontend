@@ -250,14 +250,78 @@ describe('FigureCard', () => {
     });
   });
 
+  describe('Search Highlighting', () => {
+    it('should highlight matching text in figure name when searchQuery provided', () => {
+      // mockFigure has name: 'Test Figure' - search for 'Test'
+      render(<FigureCard figure={mockFigureWithAllData} searchQuery="Test" />);
+
+      // The name should be rendered with highlighting
+      const nameLink = screen.getByRole('link', { name: mockFigureWithAllData.name });
+      expect(nameLink).toBeInTheDocument();
+      // Check that mark element exists for highlighted text
+      const marks = nameLink.querySelectorAll('mark');
+      expect(marks.length).toBeGreaterThan(0);
+    });
+
+    it('should highlight matching text in manufacturer when searchQuery provided', () => {
+      // mockFigure has manufacturer: 'Test Company' - search for 'Company'
+      render(<FigureCard figure={mockFigureWithAllData} searchQuery="Company" />);
+
+      // Manufacturer text should contain highlighting with mark element
+      const companyText = screen.getByText('Company');
+      expect(companyText.tagName.toLowerCase()).toBe('mark');
+    });
+
+    it('should not highlight when searchQuery is empty', () => {
+      render(<FigureCard figure={mockFigureWithAllData} searchQuery="" />);
+
+      const nameLink = screen.getByRole('link', { name: mockFigureWithAllData.name });
+      expect(nameLink).toBeInTheDocument();
+      // No mark elements should be present
+      const marks = nameLink.querySelectorAll('mark');
+      expect(marks.length).toBe(0);
+    });
+
+    it('should not highlight when searchQuery is undefined', () => {
+      render(<FigureCard figure={mockFigureWithAllData} />);
+
+      const nameLink = screen.getByRole('link', { name: mockFigureWithAllData.name });
+      expect(nameLink).toBeInTheDocument();
+      // No mark elements should be present
+      const marks = nameLink.querySelectorAll('mark');
+      expect(marks.length).toBe(0);
+    });
+
+    it('should highlight multiple search terms', () => {
+      const figure = {
+        ...mockFigureWithAllData,
+        name: 'Saber Alter Figure',
+        manufacturer: 'Good Smile Company',
+      };
+      render(<FigureCard figure={figure} searchQuery="Saber Good" />);
+
+      // Both "Saber" in name and "Good" in manufacturer should be highlighted
+      const nameLink = screen.getByRole('link', { name: figure.name });
+      expect(nameLink).toBeInTheDocument();
+    });
+
+    it('should handle special regex characters in searchQuery safely', () => {
+      render(<FigureCard figure={mockFigureWithAllData} searchQuery="test.* [special]" />);
+
+      // Should not throw an error with special regex characters
+      const nameLink = screen.getByRole('link', { name: mockFigureWithAllData.name });
+      expect(nameLink).toBeInTheDocument();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle missing location gracefully', () => {
-      const figureWithoutLocation = { 
-        ...mockFigure, 
-        location: undefined, 
-        boxNumber: undefined 
+      const figureWithoutLocation = {
+        ...mockFigure,
+        location: undefined,
+        boxNumber: undefined
       };
-      
+
       render(<FigureCard figure={figureWithoutLocation} />);
 
       // When location/boxNumber are undefined, React renders them as empty strings

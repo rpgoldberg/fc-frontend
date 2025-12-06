@@ -1,52 +1,83 @@
 import React from 'react';
-import { IconButton, Tooltip, Icon, ButtonGroup } from '@chakra-ui/react';
-import { MoonIcon, SunIcon, QuestionIcon } from '@chakra-ui/icons';
-import { FaTerminal } from 'react-icons/fa';
-import { useCustomTheme } from '../hooks/useCustomTheme';
+import {
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Button,
+  Icon,
+  HStack,
+  Text,
+  Box,
+} from '@chakra-ui/react';
+import { ChevronDownIcon, MoonIcon, SunIcon, StarIcon } from '@chakra-ui/icons';
+import { FaTerminal, FaDragon, FaRobot, FaSnowflake } from 'react-icons/fa';
+import { TbBrandRadixUi } from 'react-icons/tb';
+import { useCustomTheme, getThemeColors } from '../hooks/useCustomTheme';
+import { THEME_OPTIONS } from '../stores/themeStore';
+import { ColorProfile } from '../types';
+
+// Icon mapping for each theme
+const themeIcons: Record<ColorProfile, React.ReactElement> = {
+  light: <SunIcon />,
+  dark: <MoonIcon />,
+  terminal: <Icon as={FaTerminal} />,
+  tokyonight: <StarIcon />, // Stars for Tokyo Night
+  nord: <Icon as={FaSnowflake} />, // Snowflake for Nordic theme
+  dracula: <Icon as={FaDragon} />,
+  solarized: <Icon as={TbBrandRadixUi} />,
+  cyberpunk: <Icon as={FaRobot} />,
+};
+
+// Color accents for menu items
+const getThemeAccent = (profile: ColorProfile): string => {
+  const colors = getThemeColors(profile);
+  if (colors) return colors.accent;
+  if (profile === 'dark') return '#718096';
+  return '#3182ce';
+};
 
 const ThemeToggle: React.FC = () => {
-  const { customTheme, colorProfile, setCustomTheme } = useCustomTheme();
+  const { colorProfile, setCustomTheme } = useCustomTheme();
+
+  const currentTheme = THEME_OPTIONS.find(t => t.value === colorProfile);
 
   return (
-    <ButtonGroup isAttached size="sm" variant="outline">
-      <Tooltip label="Light mode" placement="bottom">
-        <IconButton
-          aria-label="Light mode"
-          icon={<SunIcon />}
-          onClick={() => setCustomTheme('light')}
-          colorScheme={colorProfile === 'light' ? 'blue' : 'gray'}
-          variant={colorProfile === 'light' ? 'solid' : 'ghost'}
-        />
-      </Tooltip>
-      <Tooltip label="Dark mode" placement="bottom">
-        <IconButton
-          aria-label="Dark mode"
-          icon={<MoonIcon />}
-          onClick={() => setCustomTheme('dark')}
-          colorScheme={colorProfile === 'dark' ? 'blue' : 'gray'}
-          variant={colorProfile === 'dark' ? 'solid' : 'ghost'}
-        />
-      </Tooltip>
-      <Tooltip label="Terminal mode" placement="bottom">
-        <IconButton
-          aria-label="Terminal mode"
-          icon={<Icon as={FaTerminal} />}
-          onClick={() => setCustomTheme('terminal')}
-          colorScheme={colorProfile === 'terminal' ? 'green' : 'gray'}
-          variant={colorProfile === 'terminal' ? 'solid' : 'ghost'}
-          color={customTheme === 'terminal' ? '#00ff00' : undefined}
-        />
-      </Tooltip>
-      <Tooltip label="Surprise me! (random theme)" placement="bottom">
-        <IconButton
-          aria-label="Surprise mode"
-          icon={<QuestionIcon />}
-          onClick={() => setCustomTheme('surprise')}
-          colorScheme={colorProfile === 'surprise' ? 'purple' : 'gray'}
-          variant={colorProfile === 'surprise' ? 'solid' : 'ghost'}
-        />
-      </Tooltip>
-    </ButtonGroup>
+    <Menu>
+      <MenuButton
+        as={Button}
+        rightIcon={<ChevronDownIcon />}
+        size="sm"
+        variant="outline"
+        leftIcon={themeIcons[colorProfile]}
+      >
+        {currentTheme?.label || 'Theme'}
+      </MenuButton>
+      <MenuList zIndex={1000}>
+        {THEME_OPTIONS.map((theme) => (
+          <MenuItem
+            key={theme.value}
+            onClick={() => setCustomTheme(theme.value)}
+            bg={colorProfile === theme.value ? 'gray.100' : undefined}
+            _dark={{ bg: colorProfile === theme.value ? 'gray.700' : undefined }}
+          >
+            <HStack spacing={3} w="full">
+              <Box color={getThemeAccent(theme.value)}>
+                {themeIcons[theme.value]}
+              </Box>
+              <Box flex={1}>
+                <Text fontWeight={colorProfile === theme.value ? 'bold' : 'normal'}>
+                  {theme.label}
+                </Text>
+                <Text fontSize="xs" color="gray.500">
+                  {theme.description}
+                </Text>
+              </Box>
+            </HStack>
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Menu>
   );
 };
 

@@ -1,4 +1,4 @@
-export type ColorProfile = 'light' | 'dark' | 'terminal' | 'surprise';
+export type ColorProfile = 'light' | 'dark' | 'terminal' | 'tokyonight' | 'nord' | 'dracula' | 'solarized' | 'cyberpunk';
 
 export interface User {
   _id: string;

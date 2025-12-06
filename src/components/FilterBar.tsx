@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Flex,
@@ -29,7 +29,7 @@ interface FilterBarProps {
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) => {
-  const { isOpen, onToggle, onClose } = useDisclosure();
+  const { isOpen, onToggle } = useDisclosure();
   const [filters, setFilters] = useState<FilterValues>(initialFilters);
 
   const { data: stats } = useQuery('figureStats', getFigureStats, {
@@ -38,15 +38,44 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
 
   const filterBg = useColorModeValue('white', 'gray.800');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // Auto-apply filters on select change
+  const handleSelectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const newFilters = { ...filters, [name]: value || undefined };
+    // Remove undefined/empty values
+    Object.keys(newFilters).forEach(key => {
+      if (!newFilters[key as keyof FilterValues]) {
+        delete newFilters[key as keyof FilterValues];
+      }
+    });
+    setFilters(newFilters);
+    onFilter(newFilters);
+  }, [filters, onFilter]);
+
+  // Debounced input change for box number (text input needs debounce)
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onFilter(filters);
-  };
+  // Apply filter when user stops typing in box number field
+  const handleInputBlur = useCallback(() => {
+    const cleanFilters = { ...filters };
+    Object.keys(cleanFilters).forEach(key => {
+      if (!cleanFilters[key as keyof FilterValues]) {
+        delete cleanFilters[key as keyof FilterValues];
+      }
+    });
+    onFilter(cleanFilters);
+  }, [filters, onFilter]);
+
+  // Handle Enter key in box number input
+  const handleInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleInputBlur();
+    }
+  }, [handleInputBlur]);
 
   const handleReset = () => {
     setFilters({});
@@ -85,8 +114,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
 
       <Collapse in={isOpen} animateOpacity>
         <Box
-          as="form"
-          onSubmit={handleSubmit}
           p={4}
           bg={filterBg}
           borderRadius="md"
@@ -100,7 +127,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
                 name="manufacturer"
                 placeholder="All Manufacturers"
                 value={filters.manufacturer || ''}
-                onChange={handleInputChange}
+                onChange={handleSelectChange}
                 size="sm"
               >
                 {stats?.manufacturerStats
@@ -119,7 +146,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
                 name="scale"
                 placeholder="All Scales"
                 value={filters.scale || ''}
-                onChange={handleInputChange}
+                onChange={handleSelectChange}
                 size="sm"
               >
                 {stats?.scaleStats
@@ -138,7 +165,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
                 name="location"
                 placeholder="All Locations"
                 value={filters.location || ''}
-                onChange={handleInputChange}
+                onChange={handleSelectChange}
                 size="sm"
               >
                 {stats?.locationStats
@@ -153,33 +180,17 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
 
             <FormControl>
               <FormLabel fontSize="sm">Box Number</FormLabel>
-              <Input 
-                name="boxNumber" 
-                placeholder="Any box" 
+              <Input
+                name="boxNumber"
+                placeholder="Any box (press Enter to apply)"
                 value={filters.boxNumber || ''}
                 onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onKeyDown={handleInputKeyDown}
                 size="sm"
               />
             </FormControl>
           </SimpleGrid>
-
-          <Flex justify="flex-end" mt={4}>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              mr={2} 
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              size="sm" 
-              colorScheme="brand"
-            >
-              Apply Filters
-            </Button>
-          </Flex>
         </Box>
       </Collapse>
     </Box>
