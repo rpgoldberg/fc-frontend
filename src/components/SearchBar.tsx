@@ -16,6 +16,49 @@ import { FaSearch } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 import { searchFigures } from '../api';
 
+// Helper component to highlight matching text in autocomplete suggestions
+const HighlightMatch: React.FC<{ text: string; query: string; highlightColor: string }> = ({
+  text,
+  query,
+  highlightColor
+}) => {
+  if (!query || !text) return <>{text}</>;
+
+  const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+  if (terms.length === 0) return <>{text}</>;
+
+  // Build a regex that matches any of the search terms (case-insensitive)
+  const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedTerms.join('|')})`, 'gi');
+
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        const isMatch = terms.some(term => part.toLowerCase() === term);
+        return isMatch ? (
+          <Box
+            key={index}
+            as="mark"
+            display="inline"
+            px={0.5}
+            borderRadius="sm"
+            sx={{
+              background: `${highlightColor} !important`,
+              color: 'inherit',
+            }}
+          >
+            {part}
+          </Box>
+        ) : (
+          <React.Fragment key={index}>{part}</React.Fragment>
+        );
+      })}
+    </>
+  );
+};
+
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
@@ -36,6 +79,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const dropdownBg = useColorModeValue('white', 'gray.700');
   const hoverBg = useColorModeValue('gray.100', 'gray.600');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const highlightColor = useColorModeValue('var(--chakra-colors-yellow-200)', 'var(--chakra-colors-yellow-600)');
 
   // Debounce the search query
   useEffect(() => {
@@ -183,10 +227,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     onClick={() => handleSuggestionClick(result.id)}
                   >
                     <Text fontWeight="medium" fontSize="sm" noOfLines={1}>
-                      {result.name}
+                      <HighlightMatch text={result.name} query={query} highlightColor={highlightColor} />
                     </Text>
                     <Text fontSize="xs" color="gray.500" noOfLines={1}>
-                      {result.manufacturer} • {result.scale}
+                      <HighlightMatch text={result.manufacturer || ''} query={query} highlightColor={highlightColor} /> • {result.scale}
                     </Text>
                   </Box>
                 ))}
