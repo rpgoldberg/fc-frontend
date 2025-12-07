@@ -105,10 +105,13 @@ const Login: React.FC = () => {
         <Flex direction="column" align="center" mb={8}>
           <Icon as={FaCube} boxSize={12} color="brand.500" mb={2} />
           <Heading size="xl" textAlign="center" color={headingColor}>
-            FigureCollector
+            FigureCollecting
           </Heading>
           <Text color={textColor} mt={2}>
             Sign in to manage your collection
+          </Text>
+          <Text fontSize="xs" color="gray.500" mt={2} textAlign="center">
+            Uses data from MyFigureCollection.net. Not affiliated with MFC.
           </Text>
         </Flex>
         
