@@ -90,7 +90,7 @@ describe('Login', () => {
       render(<Login />);
 
       // Use semantic queries where appropriate
-      expect(screen.getByRole('heading', { name: 'FigureCollector' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'FigureCollecting' })).toBeInTheDocument();
       expect(screen.getByText('Sign in to manage your collection')).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument();
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument(); // password input doesn't have textbox role when type="password"
@@ -111,7 +111,7 @@ describe('Login', () => {
     it('should render app logo and title', () => {
       render(<Login />);
 
-      expect(screen.getByRole('heading', { name: 'FigureCollector' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'FigureCollecting' })).toBeInTheDocument();
       expect(screen.getByText('Sign in to manage your collection')).toBeInTheDocument();
     });
   });
