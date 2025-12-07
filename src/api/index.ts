@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
-import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User } from '../types';
+import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User, BulkImportPreviewResponse, BulkImportExecuteResponse } from '../types';
 import { createLogger } from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
@@ -208,4 +208,15 @@ export const getPublicConfig = async (key: string): Promise<SystemConfig | null>
     logger.warn(`Failed to fetch public config '${key}':`, error);
     return null;
   }
+};
+
+// Bulk Import API
+export const previewBulkImport = async (csvContent: string): Promise<BulkImportPreviewResponse> => {
+  const response = await api.post('/figures/bulk-import/preview', { csvContent });
+  return response.data;
+};
+
+export const executeBulkImport = async (csvContent: string, skipDuplicates = true): Promise<BulkImportExecuteResponse> => {
+  const response = await api.post('/figures/bulk-import', { csvContent, skipDuplicates });
+  return response.data;
 };

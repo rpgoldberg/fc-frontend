@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import {
   Box,
   Heading,
@@ -10,19 +10,29 @@ import {
   Spinner,
   Center,
   useToast,
+  useDisclosure,
+  HStack,
 } from '@chakra-ui/react';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaFileImport } from 'react-icons/fa';
 import { Link as RouterLink } from 'react-router-dom';
 import { getFigures, filterFigures } from '../api';
 import FigureCard from '../components/FigureCard';
 import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
 import EmptyState from '../components/EmptyState';
+import BulkImportModal from '../components/BulkImportModal';
 
 const FigureList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({});
   const toast = useToast();
+  const queryClient = useQueryClient();
+  const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
+
+  const handleImportComplete = () => {
+    // Invalidate the figures query to refresh the list
+    queryClient.invalidateQueries(['figures']);
+  };
   
   const { data, isLoading, error } = useQuery(
     ['figures', page, filters],
@@ -78,14 +88,24 @@ const FigureList: React.FC = () => {
     <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">Your Figures</Heading>
-        <Button
-          as={RouterLink}
-          to="/figures/add"
-          leftIcon={<FaPlus />}
-          colorScheme="brand"
-        >
-          Add Figure
-        </Button>
+        <HStack spacing={3}>
+          <Button
+            onClick={onImportOpen}
+            leftIcon={<FaFileImport />}
+            colorScheme="purple"
+            variant="outline"
+          >
+            Import from MFC
+          </Button>
+          <Button
+            as={RouterLink}
+            to="/figures/add"
+            leftIcon={<FaPlus />}
+            colorScheme="brand"
+          >
+            Add Figure
+          </Button>
+        </HStack>
       </Flex>
 
       <FilterBar
@@ -118,6 +138,12 @@ const FigureList: React.FC = () => {
           />
         </>
       )}
+
+      <BulkImportModal
+        isOpen={isImportOpen}
+        onClose={onImportClose}
+        onImportComplete={handleImportComplete}
+      />
     </Box>
   );
 };

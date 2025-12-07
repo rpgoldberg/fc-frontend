@@ -70,3 +70,41 @@ export interface SystemConfig {
   description?: string;
   isPublic: boolean;
 }
+
+// Bulk Import Types
+export type BulkImportItemStatus = 'new' | 'catalog_exists' | 'duplicate';
+
+export interface BulkImportPreviewItem {
+  mfcId: number;
+  title: string;
+  cleanTitle: string;
+  manufacturers: string[];
+  scale?: string;
+  status: BulkImportItemStatus;
+  collectionStatus: string;
+  rating?: number;
+  note?: string;
+}
+
+export interface BulkImportPreviewResponse {
+  success: boolean;
+  totalItems: number;
+  summary: {
+    new: number;
+    catalogExists: number;
+    duplicates: number;
+  };
+  items: BulkImportPreviewItem[];
+}
+
+export interface BulkImportExecuteResponse {
+  success: boolean;
+  totalItems: number;
+  imported: number;
+  skipped: number;
+  errors: Array<{
+    mfcId: number;
+    title: string;
+    error: string;
+  }>;
+}
