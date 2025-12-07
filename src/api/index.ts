@@ -145,8 +145,13 @@ export const updateUserProfile = async (userData: Partial<User>): Promise<User> 
 };
 
 // Figures API
-export const getFigures = async (page = 1, limit = 10): Promise<PaginatedResponse<Figure>> => {
-  const response = await api.get(`/figures?page=${page}&limit=${limit}`);
+export const getFigures = async (
+  page = 1,
+  limit = 10,
+  sortBy = 'createdAt',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<PaginatedResponse<Figure>> => {
+  const response = await api.get(`/figures?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`);
   return response.data;
 };
 
@@ -182,13 +187,15 @@ export const filterFigures = async (
     boxNumber?: string;
     page?: number;
     limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }
 ): Promise<PaginatedResponse<Figure>> => {
   const queryString = Object.entries(params)
     .filter(([_, value]) => value !== undefined)
     .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
     .join('&');
-    
+
   const response = await api.get(`/figures/filter?${queryString}`);
   return response.data;
 };
