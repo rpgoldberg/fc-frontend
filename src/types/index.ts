@@ -108,3 +108,61 @@ export interface BulkImportExecuteResponse {
     error: string;
   }>;
 }
+
+// MFC Sync Types (Scraper Service)
+export interface MfcCookies {
+  PHPSESSID: string;
+  sesUID: string;
+  sesDID: string;
+}
+
+export interface MfcCookieValidationResult {
+  valid: boolean;
+  username?: string;
+  userId?: string;
+  error?: string;
+}
+
+export interface MfcSyncStats {
+  owned: number;
+  ordered: number;
+  wished: number;
+  total: number;
+  nsfw: number;
+}
+
+export interface MfcSyncResult {
+  success: boolean;
+  parsedCount: number;
+  queuedCount: number;
+  skippedCount: number;
+  listsFound?: number;
+  stats: MfcSyncStats;
+  errors: string[];
+}
+
+export interface MfcQueueStats {
+  queues: {
+    hot: number;
+    warm: number;
+    cold: number;
+  };
+  total: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  rateLimit: {
+    active: boolean;
+    currentDelayMs: number;
+  };
+}
+
+export interface MfcParsedItem {
+  mfcId: string;
+  name: string;
+  status: 'owned' | 'ordered' | 'wished';
+  category?: string;
+  releaseDate?: string;
+  price?: string;
+  isNsfw: boolean;
+}

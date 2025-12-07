@@ -12,8 +12,13 @@ import {
   useToast,
   useDisclosure,
   HStack,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Icon,
 } from '@chakra-ui/react';
-import { FaPlus, FaFileImport } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaSync, FaChevronDown } from 'react-icons/fa';
 import { Link as RouterLink } from 'react-router-dom';
 import { getFigures, filterFigures } from '../api';
 import FigureCard from '../components/FigureCard';
@@ -21,6 +26,7 @@ import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
 import EmptyState from '../components/EmptyState';
 import BulkImportModal from '../components/BulkImportModal';
+import MfcSyncModal from '../components/MfcSyncModal';
 
 const FigureList: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -28,8 +34,14 @@ const FigureList: React.FC = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
   const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
+  const { isOpen: isSyncOpen, onOpen: onSyncOpen, onClose: onSyncClose } = useDisclosure();
 
   const handleImportComplete = () => {
+    // Invalidate the figures query to refresh the list
+    queryClient.invalidateQueries(['figures']);
+  };
+
+  const handleSyncComplete = () => {
     // Invalidate the figures query to refresh the list
     queryClient.invalidateQueries(['figures']);
   };
@@ -89,14 +101,25 @@ const FigureList: React.FC = () => {
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">Your Figures</Heading>
         <HStack spacing={3}>
-          <Button
-            onClick={onImportOpen}
-            leftIcon={<FaFileImport />}
-            colorScheme="purple"
-            variant="outline"
-          >
-            Import from MFC
-          </Button>
+          <Menu>
+            <MenuButton
+              as={Button}
+              leftIcon={<FaFileImport />}
+              rightIcon={<Icon as={FaChevronDown} />}
+              colorScheme="purple"
+              variant="outline"
+            >
+              Import from MFC
+            </MenuButton>
+            <MenuList>
+              <MenuItem icon={<Icon as={FaFileImport} />} onClick={onImportOpen}>
+                Import CSV File
+              </MenuItem>
+              <MenuItem icon={<Icon as={FaSync} />} onClick={onSyncOpen}>
+                Sync MFC Account
+              </MenuItem>
+            </MenuList>
+          </Menu>
           <Button
             as={RouterLink}
             to="/figures/add"
@@ -143,6 +166,12 @@ const FigureList: React.FC = () => {
         isOpen={isImportOpen}
         onClose={onImportClose}
         onImportComplete={handleImportComplete}
+      />
+
+      <MfcSyncModal
+        isOpen={isSyncOpen}
+        onClose={onSyncClose}
+        onSyncComplete={handleSyncComplete}
       />
     </Box>
   );
