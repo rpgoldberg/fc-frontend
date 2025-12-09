@@ -62,6 +62,10 @@ module.exports = {
   modulePathIgnorePatterns: [
     '<rootDir>/node_modules/@emotion/css/dist/emotion-css.esm.js'
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/src/__tests__/integration/cross-service/' // E2E tests require running backend - not for PR CI
+  ],
   modulePaths: ['<rootDir>/src'],
   resolver: '<rootDir>/node_modules/jest-pnp-resolver',
   maxWorkers: '50%',
