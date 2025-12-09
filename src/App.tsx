@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/authStore';
 import Layout from './components/Layout';
 import TerminalThemeProvider from './components/TerminalThemeProvider';
 import { useCustomTheme } from './hooks/useCustomTheme';
+import { useSessionValidator } from './hooks/useSessionValidator';
 import Dashboard from './pages/Dashboard';
 import FigureList from './pages/FigureList';
 import FigureDetail from './pages/FigureDetail';
@@ -30,6 +31,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 const App: React.FC = () => {
   const { colorProfile } = useCustomTheme();
+
+  // Proactively validate session - redirects to login if expired
+  useSessionValidator();
 
   return (
     <TerminalThemeProvider key={colorProfile}>
