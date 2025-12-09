@@ -230,7 +230,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                       <HighlightMatch text={result.name} query={query} highlightColor={highlightColor} />
                     </Text>
                     <Text fontSize="xs" color="gray.500" noOfLines={1}>
-                      <HighlightMatch text={result.manufacturer || ''} query={query} highlightColor={highlightColor} /> • {result.scale}
+                      <HighlightMatch text={result.manufacturer || ''} query={query} highlightColor={highlightColor} /> • <HighlightMatch text={result.scale || ''} query={query} highlightColor={highlightColor} />
                     </Text>
                   </Box>
                 ))}
