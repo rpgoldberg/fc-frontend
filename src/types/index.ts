@@ -21,6 +21,7 @@ export interface Figure {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  searchScore?: number;
 }
 
 export interface FigureFormData {
@@ -52,6 +53,7 @@ export interface SearchResult {
   location: string;
   boxNumber: string;
   imageUrl?: string;
+  searchScore?: number;
 }
 
 export interface StatsData {
