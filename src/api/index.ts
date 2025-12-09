@@ -43,20 +43,26 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    const { user, logout } = useAuthStore.getState();
+
     // Handle 401 Unauthorized (expired/invalid token)
     if (error.response?.status === 401) {
-      const { logout } = useAuthStore.getState();
-      
       // Clear auth state
       logout();
-      
       // Clear localStorage
       localStorage.removeItem('auth-storage');
-      
       // Redirect to login page
       window.location.href = '/login';
+      return Promise.reject(error);
     }
-    
+
+    // Handle 502/503/504 (backend unavailable) - log but don't redirect
+    if (!error.response && user?.token) {
+      logger.warn('Network error detected while authenticated - backend may be unavailable');
+    } else if ([502, 503, 504].includes(error.response?.status) && user?.token) {
+      logger.warn(`Backend unavailable (${error.response.status}) - user may need to re-authenticate`);
+    }
+
     return Promise.reject(error);
   }
 );

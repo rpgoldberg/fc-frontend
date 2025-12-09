@@ -95,14 +95,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
     ['searchSuggestions', debouncedQuery],
     () => searchFigures(debouncedQuery),
     {
-      enabled: debouncedQuery.length >= 2, // Only search with 2+ characters
+      enabled: debouncedQuery.length >= 3, // Match backend Atlas Search minGrams: 3
       staleTime: 30000, // Cache for 30 seconds
     }
   );
 
   // Show dropdown when we have results or loading
   useEffect(() => {
-    if (query.length >= 2 && (isLoading || (suggestions && suggestions.length > 0))) {
+    if (query.length >= 3 && (isLoading || (suggestions && suggestions.length > 0))) {
       setIsOpen(true);
     } else {
       setIsOpen(false);
@@ -167,7 +167,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
-              if (query.length >= 2 && suggestions && suggestions.length > 0) {
+              if (query.length >= 3 && suggestions && suggestions.length > 0) {
                 setIsOpen(true);
               }
             }}
@@ -230,7 +230,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                       <HighlightMatch text={result.name} query={query} highlightColor={highlightColor} />
                     </Text>
                     <Text fontSize="xs" color="gray.500" noOfLines={1}>
-                      <HighlightMatch text={result.manufacturer || ''} query={query} highlightColor={highlightColor} /> • {result.scale}
+                      <HighlightMatch text={result.manufacturer || ''} query={query} highlightColor={highlightColor} /> • <HighlightMatch text={result.scale || ''} query={query} highlightColor={highlightColor} />
+                      {result.searchScore !== undefined && <Text as="span" color="gray.400" ml={2}>({result.searchScore.toFixed(2)})</Text>}
                     </Text>
                   </Box>
                 ))}
