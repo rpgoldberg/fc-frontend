@@ -9,30 +9,156 @@ export interface User {
   token?: string;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Schema v3.0 Enums and Subdocument Types
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Simplified to 3 options: preordered merged into ordered
+export type CollectionStatus = 'owned' | 'ordered' | 'wished';
+
+// Merchant info for tracking where figures were purchased
+export interface IMerchant {
+  name: string;
+  url?: string;
+}
+
+// Figure condition includes "sealed" since many collectors keep figures unopened
+export type FigureCondition = 'sealed' | 'likenew' | 'verygood' | 'good' | 'fair' | 'poor';
+
+// Box condition is separate - figure could be opened but box pristine, or vice versa
+export type BoxCondition = 'mint' | 'verygood' | 'good' | 'fair' | 'poor';
+
+export interface IRelease {
+  date?: string;
+  price?: number;
+  currency?: string;
+  isRerelease?: boolean;
+}
+
+export interface IDimensions {
+  heightMm?: number;
+  widthMm?: number;
+  depthMm?: number;
+  scaledHeight?: number;
+}
+
+export interface IPurchaseInfo {
+  date?: string;
+  price?: number;
+  currency?: string;
+}
+
+export interface ICompanyRole {
+  companyId: string;
+  companyName?: string; // For display purposes
+  roleId: string;
+  roleName?: string; // For display purposes
+}
+
+export interface IArtistRole {
+  artistId: string;
+  artistName?: string; // For display purposes
+  roleId: string;
+  roleName?: string; // For display purposes
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Main Figure Interface (Schema v3.0)
+// ═══════════════════════════════════════════════════════════════════════════
+
 export interface Figure {
   _id: string;
+  // Core fields (existing)
   manufacturer: string;
   name: string;
   scale: string;
   mfcLink?: string;
   location?: string;
-  boxNumber?: string;
+  storageDetail?: string; // Specific location within storage (shelf label, box ID, etc.)
+  boxNumber?: string; // Legacy alias for storageDetail (backward compatibility)
   imageUrl?: string;
   userId: string;
   createdAt: string;
   updatedAt: string;
   searchScore?: number;
+
+  // Schema v3.0 - Product identification
+  mfcId?: number;
+  jan?: string; // JAN/UPC/EAN barcode
+
+  // Schema v3.0 - Releases (array for rereleases)
+  releases?: IRelease[];
+
+  // Schema v3.0 - Physical dimensions
+  dimensions?: IDimensions;
+
+  // Schema v3.0 - Company/Artist roles
+  companyRoles?: ICompanyRole[];
+  artistRoles?: IArtistRole[];
+
+  // Schema v3.0 - User-specific data
+  collectionStatus?: CollectionStatus;
+  purchaseInfo?: IPurchaseInfo;
+  merchant?: IMerchant;
+  rating?: number; // 1-10 for owned figures
+  wishRating?: number; // 1-5 priority stars for wished figures
+  quantity?: number; // Number of copies owned (default 1)
+  note?: string; // Personal notes/comments about this figure
+
+  // Condition tracking (figure and box are separate)
+  figureCondition?: FigureCondition;
+  figureConditionNotes?: string;
+  boxCondition?: BoxCondition;
+  boxConditionNotes?: string;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Form Data Interface (Schema v3.0)
+// ═══════════════════════════════════════════════════════════════════════════
+
 export interface FigureFormData {
+  // Core fields (existing)
   manufacturer: string;
   name: string;
   scale: string;
   mfcLink?: string;
-  mfcAuth?: string;
+  mfcAuth?: string; // Not stored, only used for scraping
   location?: string;
-  boxNumber?: string;
+  storageDetail?: string; // Specific location within storage (shelf label, box ID, etc.)
+  boxNumber?: string; // Legacy alias for storageDetail (backward compatibility)
   imageUrl?: string;
+
+  // Schema v3.0 - Product identification
+  mfcId?: number;
+  jan?: string; // JAN/UPC/EAN barcode
+
+  // Schema v3.0 - Primary release (simplified for form)
+  releaseDate?: string;
+  releasePrice?: number;
+  releaseCurrency?: string;
+
+  // Schema v3.0 - Physical dimensions
+  heightMm?: number;
+  widthMm?: number;
+  depthMm?: number;
+
+  // Schema v3.0 - User-specific data
+  collectionStatus?: CollectionStatus;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  purchaseCurrency?: string;
+  merchantName?: string;
+  merchantUrl?: string;
+  rating?: number; // 1-10 for owned figures
+  wishRating?: number; // 1-5 priority stars for wished figures
+  quantity?: number; // Number of copies owned (default 1)
+  note?: string; // Personal notes/comments about this figure
+
+  // Condition tracking (figure and box are separate)
+  figureCondition?: FigureCondition;
+  figureConditionNotes?: string;
+  boxCondition?: BoxCondition;
+  boxConditionNotes?: string;
 }
 
 export interface PaginatedResponse<T> {

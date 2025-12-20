@@ -62,7 +62,7 @@ describe('FigureForm Comprehensive Tests', () => {
     mfcLink: 'https://myfigurecollection.net/item/123456',
     imageUrl: 'https://example.com/miku.jpg',
     location: 'Shelf A',
-    boxNumber: 'B001',
+    storageDetail: 'B001',
   };
 
   beforeEach(() => {
@@ -91,7 +91,7 @@ describe('FigureForm Comprehensive Tests', () => {
       expect(screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/1\/8, 1\/7/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Shelf, Display Case/i)).toBeInTheDocument();
-      expect(screen.getByPlaceholderText(/A1, Box 3/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/Shelf A-3, Box #12/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/example\.com\/image\.jpg/i)).toBeInTheDocument();
     });
 
@@ -99,7 +99,12 @@ describe('FigureForm Comprehensive Tests', () => {
       render(<FigureForm initialData={mockFigure} onSubmit={mockOnSubmit} isLoading={false} />);
 
       expect(screen.getByRole('form')).toBeInTheDocument();
-      expect(mockReset).toHaveBeenCalledWith(mockFigure);
+      // Form reset includes all fields merged with initialData
+      expect(mockReset).toHaveBeenCalledWith(expect.objectContaining({
+        manufacturer: mockFigure.manufacturer,
+        name: mockFigure.name,
+        scale: mockFigure.scale,
+      }));
     });
 
     it('should show loading state when isLoading is true', () => {
@@ -316,7 +321,12 @@ describe('FigureForm Comprehensive Tests', () => {
         <FigureForm initialData={newFigure} onSubmit={mockOnSubmit} isLoading={false} />
       );
 
-      expect(mockReset).toHaveBeenCalledWith(newFigure);
+      // Form reset includes all fields, so check that key fields from newFigure are present
+      expect(mockReset).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'New Figure',
+        manufacturer: mockFigure.manufacturer,
+        scale: mockFigure.scale,
+      }));
     });
 
     it('should reset to empty form when no initialData', () => {
@@ -328,7 +338,7 @@ describe('FigureForm Comprehensive Tests', () => {
         scale: '',
         mfcLink: '',
         location: '',
-        boxNumber: '',
+        storageDetail: '',
         imageUrl: '',
       }));
     });

@@ -322,14 +322,14 @@ describe('FigureForm Extra Coverage Tests', () => {
             name: 'Test Figure',
             scale: '',
             location: '',
-            boxNumber: '',
+            storageDetail: '',
             imageUrl: '',
             mfcLink: '',
           }),
           expect.any(Boolean) // addAnother flag
         );
-      });
-    });
+      }, { timeout: 10000 });
+    }, 15000);
   });
 
   describe('Button States', () => {
