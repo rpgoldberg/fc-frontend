@@ -18,12 +18,11 @@ import {
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { FaLink } from 'react-icons/fa';
-import MfcAuthSection from './MfcAuthSection';
 import CoreFieldsSection from './CoreFieldsSection';
 import CollectionDetailsSection from './CollectionDetailsSection';
 import CatalogPurchaseSection from './CatalogPurchaseSection';
 import { Figure, FigureFormData, CollectionStatus } from '../../types';
-import { usePublicConfigs } from '../../hooks/usePublicConfig';
+import { retrieveMfcCookies } from '../../utils/crypto';
 
 
 type SubmitAction = 'save' | 'saveAndAdd' | null;
@@ -41,12 +40,6 @@ const logger = createLogger('FIGURE_FORM');
 const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoading, loadingAction, onResetComplete }) => {
   const [isScrapingMFC, setIsScrapingMFC] = useState(false);
   const [pendingAction, setPendingAction] = useState<SubmitAction>(null);
-
-  // Fetch dynamic MFC cookie instructions and script from backend
-  const { configs: mfcConfigs, isLoading: isLoadingConfigs } = usePublicConfigs([
-    'mfc_cookie_script',
-    'mfc_cookie_instructions'
-  ]);
 
   const {
     register,
@@ -471,6 +464,17 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     };
   }, []);
 
+  // Load stored MFC cookies silently on mount (for scraping operations)
+  useEffect(() => {
+    const loadStoredCookies = async () => {
+      const storedCookies = await retrieveMfcCookies();
+      if (storedCookies && mountedRef.current) {
+        setValue('mfcAuth', storedCookies);
+      }
+    };
+    loadStoredCookies();
+  }, [setValue]);
+
   // Handle form submission - delegates to parent with addAnother flag
   const handleFormSubmit = (data: FigureFormData) => {
     const isAddAnother = pendingAction === 'saveAndAdd';
@@ -572,15 +576,6 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
             Click the link icon to open MFC page, then manually copy data if auto-population fails
           </Text>
         </FormControl>
-
-        {/* MFC Authentication - Extracted Component */}
-        <MfcAuthSection
-          register={register}
-          setValue={setValue}
-          watch={watch}
-          mfcConfigs={mfcConfigs}
-          isLoadingConfigs={isLoadingConfigs}
-        />
 
         {/* Core Fields Section - Extracted Component */}
         <CoreFieldsSection

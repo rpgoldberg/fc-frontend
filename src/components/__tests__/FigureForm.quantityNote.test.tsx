@@ -25,7 +25,7 @@ jest.mock('../../utils/crypto', () => ({
   storeMfcCookies: jest.fn(),
   retrieveMfcCookies: jest.fn().mockResolvedValue(null),
   clearMfcCookies: jest.fn(),
-  getStorageType: jest.fn().mockReturnValue('one-time'),
+  getStorageType: jest.fn().mockReturnValue('session'),
   hasMfcCookies: jest.fn().mockReturnValue(false),
 }));
 
