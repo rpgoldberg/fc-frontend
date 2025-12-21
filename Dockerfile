@@ -149,8 +149,10 @@ COPY --from=builder /app/build /usr/share/nginx/html
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 
 # Configure nginx to not use user directive (we're already running as nginx user)
+# Also remove default site symlink to prevent it from overriding our config
 RUN sed -i '/^user /d' /etc/nginx/nginx.conf \
-    && sed -i '/^pid /d' /etc/nginx/nginx.conf
+    && sed -i '/^pid /d' /etc/nginx/nginx.conf \
+    && rm -f /etc/nginx/sites-enabled/default
 
 # Create startup script to process templates
 RUN echo '#!/bin/bash\n\

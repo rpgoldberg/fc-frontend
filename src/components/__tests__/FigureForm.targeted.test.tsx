@@ -344,7 +344,7 @@ describe('FigureForm Targeted Coverage', () => {
         mfcLink: 'https://myfigurecollection.net/item/123',
         imageUrl: 'https://example.com/image.jpg',
         location: 'Shelf A',
-        boxNumber: 'B001',
+        storageDetail: 'B001',
       };
 
       renderFigureForm({ initialData });
@@ -475,7 +475,7 @@ describe('FigureForm Targeted Coverage', () => {
       await userEvent.type(screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i), 'Name');
       await userEvent.type(screen.getByPlaceholderText(/1\/8, 1\/7/i), '1/8');
       await userEvent.type(screen.getByPlaceholderText(/Shelf, Display Case/i), 'Location');
-      await userEvent.type(screen.getByPlaceholderText(/A1, Box 3/i), 'Box');
+      await userEvent.type(screen.getByPlaceholderText(/Shelf A-3, Box #12/i), 'Box');
       await userEvent.type(screen.getByPlaceholderText(/example\.com\/image\.jpg/i), 'https://example.com/img.jpg');
       await userEvent.type(screen.getByPlaceholderText(/myfigurecollection\.net/i), 'https://myfigurecollection.net/item/1');
 
@@ -490,7 +490,7 @@ describe('FigureForm Targeted Coverage', () => {
             name: 'Name',
             scale: '1/8',
             location: 'Location',
-            boxNumber: 'Box',
+            storageDetail: 'Box',
           }),
           expect.any(Boolean) // addAnother flag
         );
