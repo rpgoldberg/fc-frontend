@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import {
   Box,
   Heading,
@@ -10,25 +10,53 @@ import {
   Spinner,
   Center,
   useToast,
+  useDisclosure,
+  HStack,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Icon,
+  Spacer,
 } from '@chakra-ui/react';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaSync, FaChevronDown } from 'react-icons/fa';
 import { Link as RouterLink } from 'react-router-dom';
 import { getFigures, filterFigures } from '../api';
 import FigureCard from '../components/FigureCard';
 import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
 import EmptyState from '../components/EmptyState';
+import BulkImportModal from '../components/BulkImportModal';
+import MfcSyncModal from '../components/MfcSyncModal';
+import MfcCookiesModal from '../components/MfcCookiesModal';
+import SortControls, { SortField, SortDirection, SortParams } from '../components/SortControls';
 
 const FigureList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({});
+  const [sortBy, setSortBy] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortDirection>('desc');
   const toast = useToast();
-  
+  const queryClient = useQueryClient();
+  const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
+  const { isOpen: isSyncOpen, onOpen: onSyncOpen, onClose: onSyncClose } = useDisclosure();
+  const { isOpen: isCookiesOpen, onOpen: onCookiesOpen, onClose: onCookiesClose } = useDisclosure();
+
+  const handleImportComplete = () => {
+    // Invalidate the figures query to refresh the list
+    queryClient.invalidateQueries(['figures']);
+  };
+
+  const handleSyncComplete = () => {
+    // Invalidate the figures query to refresh the list
+    queryClient.invalidateQueries(['figures']);
+  };
+
   const { data, isLoading, error } = useQuery(
-    ['figures', page, filters],
-    () => filters && Object.keys(filters).length > 0 
-      ? filterFigures({ ...filters, page, limit: 12 })
-      : getFigures(page, 12),
+    ['figures', page, filters, sortBy, sortOrder],
+    () => filters && Object.keys(filters).length > 0
+      ? filterFigures({ ...filters, page, limit: 12, sortBy, sortOrder })
+      : getFigures(page, 12, sortBy, sortOrder),
     {
       keepPreviousData: true,
       onError: (err: any) => {
@@ -50,6 +78,12 @@ const FigureList: React.FC = () => {
   
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleSortChange = (params: SortParams) => {
+    setSortBy(params.sortBy);
+    setSortOrder(params.sortOrder);
     setPage(1);
   };
 
@@ -78,21 +112,54 @@ const FigureList: React.FC = () => {
     <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">Your Figures</Heading>
-        <Button
-          as={RouterLink}
-          to="/figures/add"
-          leftIcon={<FaPlus />}
-          colorScheme="brand"
-        >
-          Add Figure
-        </Button>
+        <HStack spacing={3}>
+          <Menu>
+            <MenuButton
+              as={Button}
+              leftIcon={<FaFileImport />}
+              rightIcon={<Icon as={FaChevronDown} />}
+              colorScheme="purple"
+              variant="outline"
+            >
+              Import from MFC
+            </MenuButton>
+            <MenuList>
+              <MenuItem icon={<Icon as={FaFileImport} />} onClick={onImportOpen}>
+                Import CSV File
+              </MenuItem>
+              <MenuItem icon={<Icon as={FaSync} />} onClick={onSyncOpen}>
+                Sync MFC Account
+              </MenuItem>
+            </MenuList>
+          </Menu>
+          <Button
+            as={RouterLink}
+            to="/figures/add"
+            leftIcon={<FaPlus />}
+            colorScheme="brand"
+          >
+            Add Figure
+          </Button>
+        </HStack>
       </Flex>
 
       <FilterBar
         onFilter={handleFilterChange}
         initialFilters={filters}
       />
-      
+
+      <Flex mb={4} align="center" wrap="wrap" gap={4}>
+        <Text color="gray.600">
+          {data?.total ? `Showing ${data.data.length} of ${data.total} figures` : 'Loading...'}
+        </Text>
+        <Spacer />
+        <SortControls
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
+      </Flex>
+
       {data?.total === 0 ? (
         Object.keys(filters).length > 0 ? (
           <EmptyState type="filter" onClearFilters={() => handleFilterChange({})} />
@@ -101,10 +168,6 @@ const FigureList: React.FC = () => {
         )
       ) : (
         <>
-          <Text mb={4} color="gray.600">
-            Showing {data?.data.length} of {data?.total} figures
-          </Text>
-          
           <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={6}>
             {data?.data.map((figure) => (
               <FigureCard key={figure._id} figure={figure} />
@@ -118,6 +181,27 @@ const FigureList: React.FC = () => {
           />
         </>
       )}
+
+      <BulkImportModal
+        isOpen={isImportOpen}
+        onClose={onImportClose}
+        onImportComplete={handleImportComplete}
+      />
+
+      <MfcSyncModal
+        isOpen={isSyncOpen}
+        onClose={onSyncClose}
+        onSyncComplete={handleSyncComplete}
+        onOpenCookiesModal={onCookiesOpen}
+      />
+
+      <MfcCookiesModal
+        isOpen={isCookiesOpen}
+        onClose={onCookiesClose}
+        onCookiesChanged={() => {
+          // Cookies were updated - if sync modal was open, it will re-check on reopen
+        }}
+      />
     </Box>
   );
 };

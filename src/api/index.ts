@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
-import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User } from '../types';
+import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User, BulkImportPreviewResponse, BulkImportExecuteResponse } from '../types';
 import { createLogger } from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
@@ -145,8 +145,13 @@ export const updateUserProfile = async (userData: Partial<User>): Promise<User> 
 };
 
 // Figures API
-export const getFigures = async (page = 1, limit = 10): Promise<PaginatedResponse<Figure>> => {
-  const response = await api.get(`/figures?page=${page}&limit=${limit}`);
+export const getFigures = async (
+  page = 1,
+  limit = 10,
+  sortBy = 'createdAt',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<PaginatedResponse<Figure>> => {
+  const response = await api.get(`/figures?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`);
   return response.data;
 };
 
@@ -182,13 +187,15 @@ export const filterFigures = async (
     boxNumber?: string;
     page?: number;
     limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }
 ): Promise<PaginatedResponse<Figure>> => {
   const queryString = Object.entries(params)
     .filter(([_, value]) => value !== undefined)
     .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
     .join('&');
-    
+
   const response = await api.get(`/figures/filter?${queryString}`);
   return response.data;
 };
@@ -208,4 +215,15 @@ export const getPublicConfig = async (key: string): Promise<SystemConfig | null>
     logger.warn(`Failed to fetch public config '${key}':`, error);
     return null;
   }
+};
+
+// Bulk Import API
+export const previewBulkImport = async (csvContent: string): Promise<BulkImportPreviewResponse> => {
+  const response = await api.post('/figures/bulk-import/preview', { csvContent });
+  return response.data;
+};
+
+export const executeBulkImport = async (csvContent: string, skipDuplicates = true): Promise<BulkImportExecuteResponse> => {
+  const response = await api.post('/figures/bulk-import', { csvContent, skipDuplicates });
+  return response.data;
 };

@@ -196,3 +196,99 @@ export interface SystemConfig {
   description?: string;
   isPublic: boolean;
 }
+
+// Bulk Import Types
+export type BulkImportItemStatus = 'new' | 'catalog_exists' | 'duplicate';
+
+export interface BulkImportPreviewItem {
+  mfcId: number;
+  title: string;
+  cleanTitle: string;
+  manufacturers: string[];
+  scale?: string;
+  status: BulkImportItemStatus;
+  collectionStatus: string;
+  rating?: number;
+  note?: string;
+}
+
+export interface BulkImportPreviewResponse {
+  success: boolean;
+  totalItems: number;
+  summary: {
+    new: number;
+    catalogExists: number;
+    duplicates: number;
+  };
+  items: BulkImportPreviewItem[];
+}
+
+export interface BulkImportExecuteResponse {
+  success: boolean;
+  totalItems: number;
+  imported: number;
+  skipped: number;
+  errors: Array<{
+    mfcId: number;
+    title: string;
+    error: string;
+  }>;
+}
+
+// MFC Sync Types (Scraper Service)
+export interface MfcCookies {
+  PHPSESSID: string;
+  sesUID: string;
+  sesDID: string;
+}
+
+export interface MfcCookieValidationResult {
+  valid: boolean;
+  username?: string;
+  userId?: string;
+  error?: string;
+}
+
+export interface MfcSyncStats {
+  owned: number;
+  ordered: number;
+  wished: number;
+  total: number;
+  nsfw: number;
+}
+
+export interface MfcSyncResult {
+  success: boolean;
+  parsedCount: number;
+  queuedCount: number;
+  skippedCount: number;
+  listsFound?: number;
+  stats: MfcSyncStats;
+  errors: string[];
+}
+
+export interface MfcQueueStats {
+  queues: {
+    hot: number;
+    warm: number;
+    cold: number;
+  };
+  total: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  rateLimit: {
+    active: boolean;
+    currentDelayMs: number;
+  };
+}
+
+export interface MfcParsedItem {
+  mfcId: string;
+  name: string;
+  status: 'owned' | 'ordered' | 'wished';
+  category?: string;
+  releaseDate?: string;
+  price?: string;
+  isNsfw: boolean;
+}
