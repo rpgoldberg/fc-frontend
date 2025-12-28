@@ -3,10 +3,10 @@
  *
  * Extracted from FigureForm.tsx to keep modules under 750 lines.
  * Contains manufacturer, name, scale, location, storage detail, JAN, and image URL fields.
+ * Note: Image preview is now rendered in FigureFormMain as a sticky sidebar.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Box,
   FormControl,
   FormLabel,
   Input,
@@ -18,8 +18,6 @@ import {
   IconButton,
   Tooltip,
   Text,
-  Image,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { FaQuestionCircle, FaImage } from 'react-icons/fa';
 import { UseFormRegister, UseFormGetValues, FieldErrors } from 'react-hook-form';
@@ -49,15 +47,6 @@ const CoreFieldsSection: React.FC<CoreFieldsSectionProps> = ({
   validateUrl,
   openImageLink,
 }) => {
-  const [imageError, setImageError] = useState(false);
-  const previewBorderColor = useColorModeValue('gray.200', 'gray.600');
-  const previewBg = useColorModeValue('gray.50', 'gray.700');
-
-  // Reset image error when imageUrl changes
-  React.useEffect(() => {
-    setImageError(false);
-  }, [imageUrl]);
-
   return (
     <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }} gap={6}>
       <GridItem>
@@ -189,35 +178,8 @@ const CoreFieldsSection: React.FC<CoreFieldsSectionProps> = ({
           </InputGroup>
           <FormErrorMessage>{errors.imageUrl?.message}</FormErrorMessage>
           <Text fontSize="xs" color="gray.500" mt={1}>
-            Leave blank to auto-fetch from MFC
+            Leave blank to auto-fetch from MFC • Preview shown on right
           </Text>
-          {imageUrl && (
-            <Box mt={4} p={4} border="1px" borderColor={previewBorderColor} borderRadius="md">
-              <Text fontSize="sm" fontWeight="semibold" mb={2}>Image Preview:</Text>
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                maxH="300px"
-                bg={previewBg}
-                borderRadius="md"
-                overflow="hidden"
-              >
-                {imageError ? (
-                  <Text color="gray.500">Failed to load image</Text>
-                ) : (
-                  <Image
-                    src={imageUrl}
-                    alt="Figure preview"
-                    maxH="100%"
-                    maxW="100%"
-                    objectFit="contain"
-                    onError={() => setImageError(true)}
-                  />
-                )}
-              </Box>
-            </Box>
-          )}
         </FormControl>
       </GridItem>
     </Grid>
