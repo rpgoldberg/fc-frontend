@@ -70,7 +70,7 @@ describe('FigureForm Targeted Coverage', () => {
     it('should enable buttons when URLs are valid', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       const imageInput = screen.getByPlaceholderText(/example\.com\/image\.jpg/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123');
@@ -136,7 +136,7 @@ describe('FigureForm Targeted Coverage', () => {
   describe('Lines 101-103: MFC URL validation conditions', () => {
     it('should validate MFC URL with www prefix', () => {
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i) as HTMLInputElement;
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i) as HTMLInputElement;
 
       fireEvent.change(mfcInput, { target: { value: 'https://www.myfigurecollection.net/item/123' } });
       fireEvent.blur(mfcInput);
@@ -146,7 +146,7 @@ describe('FigureForm Targeted Coverage', () => {
 
     it('should validate MFC URL without www', () => {
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i) as HTMLInputElement;
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i) as HTMLInputElement;
 
       fireEvent.change(mfcInput, { target: { value: 'https://myfigurecollection.net/item/456' } });
       fireEvent.blur(mfcInput);
@@ -156,7 +156,7 @@ describe('FigureForm Targeted Coverage', () => {
 
     it('should reject non-MFC domain', () => {
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i) as HTMLInputElement;
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i) as HTMLInputElement;
 
       fireEvent.change(mfcInput, { target: { value: 'https://example.com/item/123' } });
       fireEvent.blur(mfcInput);
@@ -167,7 +167,7 @@ describe('FigureForm Targeted Coverage', () => {
 
     it('should reject MFC URL without item path', () => {
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i) as HTMLInputElement;
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i) as HTMLInputElement;
 
       fireEvent.change(mfcInput, { target: { value: 'https://myfigurecollection.net/profile/123' } });
       fireEvent.blur(mfcInput);
@@ -185,7 +185,7 @@ describe('FigureForm Targeted Coverage', () => {
       });
 
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/999');
 
@@ -207,7 +207,7 @@ describe('FigureForm Targeted Coverage', () => {
       });
 
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/888');
 
@@ -224,7 +224,7 @@ describe('FigureForm Targeted Coverage', () => {
       });
 
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/777');
 
@@ -253,7 +253,7 @@ describe('FigureForm Targeted Coverage', () => {
       });
 
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/555');
 
@@ -278,7 +278,7 @@ describe('FigureForm Targeted Coverage', () => {
       });
 
       renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/444');
 
@@ -299,7 +299,7 @@ describe('FigureForm Targeted Coverage', () => {
       );
 
       const { unmount } = renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/333');
 
@@ -320,7 +320,7 @@ describe('FigureForm Targeted Coverage', () => {
 
     it('should handle rapid MFC link changes and cleanup', async () => {
       const { unmount } = renderFigureForm();
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Rapidly change the input
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/1');
@@ -424,7 +424,7 @@ describe('FigureForm Targeted Coverage', () => {
       });
 
       // Test 2: Only MFC link filled
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123');
 
       fireEvent.submit(form);
@@ -477,7 +477,7 @@ describe('FigureForm Targeted Coverage', () => {
       await userEvent.type(screen.getByPlaceholderText(/Shelf, Display Case/i), 'Location');
       await userEvent.type(screen.getByPlaceholderText(/Shelf A-3, Box #12/i), 'Box');
       await userEvent.type(screen.getByPlaceholderText(/example\.com\/image\.jpg/i), 'https://example.com/img.jpg');
-      await userEvent.type(screen.getByPlaceholderText(/myfigurecollection\.net/i), 'https://myfigurecollection.net/item/1');
+      await userEvent.type(screen.getByPlaceholderText(/item #.*MFC URL/i), 'https://myfigurecollection.net/item/1');
 
       const form = screen.getByRole('form');
       fireEvent.submit(form);

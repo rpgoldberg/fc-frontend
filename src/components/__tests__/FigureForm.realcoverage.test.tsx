@@ -52,7 +52,7 @@ describe('FigureForm Real Coverage Tests', () => {
       renderFigureForm();
 
       // Enter an MFC link
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Find and click the MFC link button
@@ -124,7 +124,7 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should validate MFC URLs specifically', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Test invalid MFC URL
       await userEvent.type(mfcInput, 'https://example.com/item/123');
@@ -144,7 +144,7 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should accept valid MFC URLs', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Should not show error for valid MFC URL
@@ -173,7 +173,7 @@ describe('FigureForm Real Coverage Tests', () => {
       renderFigureForm({ onSubmit });
 
       // Add MFC link
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Should allow submission even without name/manufacturer
@@ -233,7 +233,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Wait for debounce and fetch
@@ -259,7 +259,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/999999');
 
       // Wait for fetch to be called
@@ -276,7 +276,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Wait for fetch attempt
@@ -303,7 +303,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Look for spinner after debounce
@@ -327,7 +327,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Wait for fetch
@@ -393,7 +393,7 @@ describe('FigureForm Real Coverage Tests', () => {
         new Promise(() => {}) // Never resolves
       );
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Unmount should not cause errors
@@ -405,7 +405,7 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should debounce MFC scraping requests', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Type rapidly
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/1');

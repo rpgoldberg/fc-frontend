@@ -33,6 +33,7 @@ export interface IRelease {
   price?: number;
   currency?: string;
   isRerelease?: boolean;
+  jan?: string;  // JAN/EAN/UPC barcode (10-13 digits)
 }
 
 export interface IDimensions {

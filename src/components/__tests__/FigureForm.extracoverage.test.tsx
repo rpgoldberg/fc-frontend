@@ -142,7 +142,7 @@ describe('FigureForm Extra Coverage Tests', () => {
       const onSubmit = jest.fn();
       renderFigureForm({ onSubmit });
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://www.myfigurecollection.net/item/123456');
 
       // Should be valid
@@ -158,7 +158,7 @@ describe('FigureForm Extra Coverage Tests', () => {
     it('should reject MFC URL without item path', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/profile/123');
 
       const form = screen.getByRole('form');
@@ -210,7 +210,7 @@ describe('FigureForm Extra Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/999');
 
       await waitFor(() => {
@@ -224,7 +224,7 @@ describe('FigureForm Extra Coverage Tests', () => {
     it('should clear previous scraping when MFC link is removed', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Type and then clear
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123');
@@ -251,7 +251,7 @@ describe('FigureForm Extra Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/789');
 
       await waitFor(() => {
@@ -270,7 +270,7 @@ describe('FigureForm Extra Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/456');
 
       await waitFor(() => {
@@ -350,7 +350,7 @@ describe('FigureForm Extra Coverage Tests', () => {
     it('should enable link buttons when valid URLs are entered', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123');
 
       const buttons = screen.getAllByRole('button');
@@ -402,7 +402,7 @@ describe('FigureForm Extra Coverage Tests', () => {
     it('should handle rapid MFC link changes', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Rapidly change the URL multiple times
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/1');
@@ -418,7 +418,7 @@ describe('FigureForm Extra Coverage Tests', () => {
     it('should cancel previous scraping when component unmounts', async () => {
       const { unmount } = renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123');
 
       // Unmount immediately

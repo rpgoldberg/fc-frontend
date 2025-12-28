@@ -86,7 +86,7 @@ describe('FigureForm Comprehensive Tests', () => {
       expect(screen.getByRole('form')).toBeInTheDocument();
 
       // Check for input fields by placeholder text to avoid ambiguity
-      expect(screen.getByPlaceholderText(/myfigurecollection\.net/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/item #.*MFC URL/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Good Smile Company/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/1\/8, 1\/7/i)).toBeInTheDocument();
@@ -182,7 +182,7 @@ describe('FigureForm Comprehensive Tests', () => {
       render(<FigureForm onSubmit={mockOnSubmit} isLoading={false} />);
 
       // Valid MFC URLs should be accepted
-      const mfcInput = screen.getByLabelText(/MyFigureCollection Link/i);
+      const mfcInput = screen.getByLabelText(/MFC Item/i);
       expect(mfcInput).toBeInTheDocument();
     });
   });
@@ -362,7 +362,7 @@ describe('FigureForm Comprehensive Tests', () => {
       render(<FigureForm onSubmit={mockOnSubmit} isLoading={false} />);
 
       expect(screen.getByRole('form')).toHaveAttribute('aria-labelledby');
-      expect(screen.getByLabelText(/MyFigureCollection Link/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/MFC Item/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Manufacturer/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Figure Name/i)).toBeInTheDocument();
     });

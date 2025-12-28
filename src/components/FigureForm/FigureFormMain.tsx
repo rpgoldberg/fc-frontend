@@ -115,7 +115,9 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
 
   const openMfcLink = () => {
     if (mfcLink) {
-      window.open(mfcLink, '_blank');
+      // Normalize to full URL before opening
+      const urlToOpen = normalizeMfcLink(mfcLink);
+      window.open(urlToOpen, '_blank');
     }
   };
 
@@ -158,6 +160,12 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   const validateMfcUrl = (value: string | undefined) => {
     if (!value) return true;
 
+    // Accept just the item number (e.g., "123456" or "1234567")
+    const numericPattern = /^\d{4,}$/;
+    if (numericPattern.test(value.trim())) {
+      return true;
+    }
+
     // First check if it's a valid URL
     const urlValidation = validateUrl(value);
     if (urlValidation !== true) return urlValidation;
@@ -165,10 +173,38 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     // Accept http/https and optional trailing slash or minor path/query fragments after the numeric id
     const mfcPattern = /^https?:\/\/(?:www\.)?myfigurecollection\.net\/item\/\d+(?:\/.*)?$/i;
     if (!mfcPattern.test(value)) {
-      return 'Please enter a valid MFC URL like https://myfigurecollection.net/item/123456';
+      return 'Enter MFC item number (e.g., 123456) or full URL';
     }
 
     return true;
+  };
+
+  // Extract MFC item ID from URL or raw number
+  const extractMfcItemId = (value: string | undefined): string | null => {
+    if (!value) return null;
+    const trimmed = value.trim();
+
+    // If it's just a number, return it
+    if (/^\d{4,}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    // Extract from URL
+    const match = trimmed.match(/\/item\/(\d+)/);
+    return match ? match[1] : null;
+  };
+
+  // Normalize MFC input to full URL for scraping
+  const normalizeMfcLink = (value: string): string => {
+    if (!value) return '';
+    const trimmed = value.trim();
+
+    // If it's just a number, convert to full URL
+    if (/^\d{4,}$/.test(trimmed)) {
+      return `https://myfigurecollection.net/item/${trimmed}`;
+    }
+
+    return trimmed;
   };
 
   // Conditional validation for name and manufacturer based on mfcLink presence
@@ -222,8 +258,10 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     const currentMfcLink = targetMfcLink || getValues('mfcLink');
     if (!currentMfcLink?.trim()) return;
 
+    // Normalize the input (accept item number or full URL)
+    const normalizedLink = normalizeMfcLink(currentMfcLink);
     const mfcPattern = /^https?:\/\/(?:www\.)?myfigurecollection\.net\/item\/\d+(?:\/.*)?$/i;
-    if (!mfcPattern.test(currentMfcLink)) return;
+    if (!mfcPattern.test(normalizedLink)) return;
 
     if (currentScrapeController.current) {
       currentScrapeController.current.abort();
@@ -243,7 +281,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
       try {
         const currentMfcAuth = getValues('mfcAuth');
         const requestBody = {
-          mfcLink: currentMfcLink,
+          mfcLink: normalizedLink,
           ...(currentMfcAuth && { mfcAuth: currentMfcAuth })
         };
         console.log('[FRONTEND] Making request to /api/figures/scrape-mfc with body:', requestBody);
@@ -354,9 +392,12 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
       debounceTimer.current = null;
     }
 
-    // Only trigger if the link is valid and non-empty
+    // Only trigger if the link is valid and non-empty (accepts item number or full URL)
     const mfcPattern = /^https?:\/\/(?:www\.)?myfigurecollection\.net\/item\/\d+(?:\/.*)?$/i;
-    if (typeof currentMfcLink === 'string' && currentMfcLink.trim() && mfcPattern.test(currentMfcLink)) {
+    const numericPattern = /^\d{4,}$/;
+    const normalizedLink = normalizeMfcLink(currentMfcLink);
+    if (typeof currentMfcLink === 'string' && currentMfcLink.trim() &&
+        (mfcPattern.test(currentMfcLink) || numericPattern.test(currentMfcLink.trim()))) {
 
       // Use optimized debounce with stable timer management
       debounceTimer.current = setTimeout(async () => {
@@ -547,13 +588,20 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
         </Text>
         {/* MFC Link at top - full width */}
         <FormControl isInvalid={!!errors.mfcLink}>
-          <FormLabel>MyFigureCollection Link</FormLabel>
+          <FormLabel>
+            MFC Item
+            {extractMfcItemId(mfcLink) && (
+              <Text as="span" color="brand.500" fontWeight="semibold" ml={2}>
+                #{extractMfcItemId(mfcLink)}
+              </Text>
+            )}
+          </FormLabel>
           <InputGroup>
             <Input
               {...register('mfcLink', {
                 validate: validateMfcUrl
               })}
-              placeholder="https://myfigurecollection.net/item/123456"
+              placeholder="Enter item # (e.g., 123456) or full MFC URL"
               data-invalid={!!errors.mfcLink}
             />
             <InputRightElement>
@@ -573,7 +621,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
           </InputGroup>
           <FormErrorMessage data-testid="form-error-message">{errors.mfcLink?.message}</FormErrorMessage>
           <Text fontSize="xs" color="gray.500" mt={1}>
-            Click the link icon to open MFC page, then manually copy data if auto-population fails
+            Enter just the item number or paste the full MFC URL • Click link icon to open page
           </Text>
         </FormControl>
 
