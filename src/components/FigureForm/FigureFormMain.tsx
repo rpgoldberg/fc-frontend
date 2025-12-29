@@ -687,7 +687,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
                 onClick={() => setPendingAction('save')}
                 isDisabled={isLoading}
               >
-                {initialData ? 'Update Figure' : 'Add Figure'}
+                {initialData ? 'Update Figure' : 'Save'}
               </Button>
 
               {!initialData && (
