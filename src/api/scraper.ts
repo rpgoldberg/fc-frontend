@@ -17,14 +17,16 @@ import {
 } from '../types';
 import { createLogger } from '../utils/logger';
 
-const SCRAPER_URL = process.env.REACT_APP_SCRAPER_URL || '/scraper';
+// Sync routes go through the backend (which proxies to scraper)
+// This ensures auth is centralized and cookies remain ephemeral
+const SYNC_URL = process.env.REACT_APP_SYNC_URL || '/api';
 const logger = createLogger('SCRAPER_API');
 
-logger.info('Scraper API URL configured as:', SCRAPER_URL);
+logger.info('Sync API URL configured as:', SYNC_URL);
 
-// Create axios instance for scraper service
+// Create axios instance for sync operations (via backend)
 const scraperApi = axios.create({
-  baseURL: SCRAPER_URL,
+  baseURL: SYNC_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -215,6 +217,100 @@ export const getSyncStatus = async (): Promise<{
   }
 
   return response.data.data;
+};
+
+// ============================================================================
+// Sync Job Management
+// ============================================================================
+
+export interface CreateSyncJobOptions {
+  sessionId: string;
+  includeLists?: string[];
+  skipCached?: boolean;
+}
+
+export interface CreateSyncJobResult {
+  job: {
+    sessionId: string;
+    phase: string;
+    message: string;
+  };
+  webhookUrl: string;
+  webhookSecret: string;
+  existing?: boolean;
+}
+
+/**
+ * Create a new sync job before starting the sync.
+ * This must be called before executeFullSync to enable SSE streaming.
+ */
+export const createSyncJob = async (
+  options: CreateSyncJobOptions
+): Promise<CreateSyncJobResult> => {
+  logger.info('Creating sync job...');
+
+  const response = await scraperApi.post('/sync/job', {
+    sessionId: options.sessionId,
+    includeLists: options.includeLists,
+    skipCached: options.skipCached,
+  });
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to create sync job');
+  }
+
+  return response.data;
+};
+
+/**
+ * Get current sync job state (for reconnection).
+ */
+export const getSyncJob = async (
+  sessionId: string
+): Promise<{
+  sessionId: string;
+  phase: string;
+  message: string;
+  stats: {
+    total: number;
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+    skipped: number;
+  };
+  startedAt: string;
+  completedAt?: string;
+} | null> => {
+  logger.verbose('Fetching sync job:', sessionId);
+
+  try {
+    const response = await scraperApi.get(`/sync/job/${sessionId}`);
+
+    if (!response.data.success) {
+      return null;
+    }
+
+    return response.data.job;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Cancel an active sync job.
+ */
+export const cancelSyncJob = async (sessionId: string): Promise<void> => {
+  logger.info('Cancelling sync job:', sessionId);
+
+  const response = await scraperApi.delete(`/sync/job/${sessionId}`);
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to cancel sync job');
+  }
 };
 
 // ============================================================================

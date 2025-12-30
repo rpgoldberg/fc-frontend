@@ -293,3 +293,62 @@ export interface MfcParsedItem {
   price?: string;
   isNsfw: boolean;
 }
+
+// ============================================================================
+// SSE Sync Events
+// ============================================================================
+
+export type SyncPhase =
+  | 'validating'
+  | 'exporting'
+  | 'parsing'
+  | 'queueing'
+  | 'enriching'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
+
+export type SyncItemStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'skipped';
+
+export interface SyncJobStats {
+  total: number;
+  pending: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  skipped: number;
+}
+
+export interface SyncJobState {
+  sessionId: string;
+  phase: SyncPhase;
+  message?: string;
+  stats: SyncJobStats;
+}
+
+export interface SseConnectedEvent {
+  sessionId: string;
+  phase: SyncPhase;
+  stats: SyncJobStats;
+  message?: string;
+}
+
+export interface SseItemUpdateEvent {
+  mfcId: string;
+  status: SyncItemStatus;
+  error?: string;
+  stats: SyncJobStats;
+  phase: SyncPhase;
+}
+
+export interface SsePhaseChangeEvent {
+  phase: SyncPhase;
+  message?: string;
+  stats: SyncJobStats;
+}
+
+export interface SseSyncCompleteEvent {
+  phase: SyncPhase;
+  stats: SyncJobStats;
+  message?: string;
+}
