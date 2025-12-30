@@ -535,8 +535,25 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   // Handle form submission - delegates to parent with addAnother flag
   const handleFormSubmit = (data: FigureFormData) => {
     const isAddAnother = pendingAction === 'saveAndAdd';
+
+    // Clear rating fields that don't apply to the current collection status
+    // - 'owned': only rating applies (1-10)
+    // - 'wished': only wishRating applies (1-5 stars)
+    // - 'ordered': neither rating applies
+    const cleanedData = { ...data };
+
+    if (cleanedData.collectionStatus === 'owned') {
+      delete cleanedData.wishRating;
+    } else if (cleanedData.collectionStatus === 'wished') {
+      delete cleanedData.rating;
+    } else {
+      // 'ordered' - clear both ratings
+      delete cleanedData.rating;
+      delete cleanedData.wishRating;
+    }
+
     // Pass the addAnother flag to parent so it can decide whether to navigate
-    onSubmit(data, isAddAnother);
+    onSubmit(cleanedData, isAddAnother);
   };
 
   // Reset form for "Save & Add Another" - called by parent after successful save

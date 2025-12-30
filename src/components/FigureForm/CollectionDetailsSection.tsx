@@ -92,19 +92,16 @@ const CollectionDetailsSection: React.FC<CollectionDetailsSectionProps> = ({
                     size="sm"
                     variant="ghost"
                     colorScheme="yellow"
-                    onClick={() => setValue('wishRating', star)}
+                    onClick={() => {
+                      // Click same star to clear, otherwise set to clicked star
+                      if (watch('wishRating') === star) {
+                        setValue('wishRating', undefined);
+                      } else {
+                        setValue('wishRating', star);
+                      }
+                    }}
                   />
                 ))}
-                {watch('wishRating') && (
-                  <IconButton
-                    aria-label="Clear rating"
-                    icon={<FaTrash />}
-                    size="xs"
-                    variant="ghost"
-                    colorScheme="gray"
-                    onClick={() => setValue('wishRating', undefined)}
-                  />
-                )}
               </HStack>
             </FormControl>
           ) : collectionStatus === 'owned' ? (
@@ -121,19 +118,88 @@ const CollectionDetailsSection: React.FC<CollectionDetailsSectionProps> = ({
                   />
                 </Tooltip>
               </FormLabel>
-              <NumberInput
-                min={1}
-                max={10}
-                step={0.5}
-                onChange={(_, val) => setValue('rating', isNaN(val) ? undefined : val)}
-                value={watch('rating') ?? ''}
-              >
-                <NumberInputField placeholder="1-10" />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
+              <HStack>
+                <Box position="relative" flex={1}>
+                  <NumberInput
+                    min={1}
+                    max={10}
+                    step={1}
+                    precision={0}
+                    allowMouseWheel={false}
+                    clampValueOnBlur={false}
+                    onChange={(valueString, valueNumber) => {
+                      // Handle manual input only - steppers are handled separately
+                      if (valueString === '' || valueString === undefined) {
+                        setValue('rating', undefined);
+                      } else if (!isNaN(valueNumber) && valueNumber >= 1 && valueNumber <= 10) {
+                        // Round to integer
+                        setValue('rating', Math.round(valueNumber));
+                      }
+                    }}
+                    value={watch('rating') ?? ''}
+                  >
+                    <NumberInputField placeholder="1-10" pr="40px" />
+                  </NumberInput>
+                  {/* Custom steppers to fully control wrap-around behavior */}
+                  <Stack
+                    position="absolute"
+                    right="1px"
+                    top="1px"
+                    bottom="1px"
+                    spacing={0}
+                    width="24px"
+                  >
+                    <IconButton
+                      aria-label="Increase"
+                      icon={<Text fontSize="xs">▲</Text>}
+                      size="xs"
+                      variant="ghost"
+                      height="50%"
+                      minW="24px"
+                      borderRadius={0}
+                      onClick={() => {
+                        const current = watch('rating');
+                        if (current === undefined || current === null) {
+                          setValue('rating', 1);
+                        } else if (current >= 10) {
+                          setValue('rating', undefined);
+                        } else {
+                          setValue('rating', Math.min(10, current + 1));
+                        }
+                      }}
+                    />
+                    <IconButton
+                      aria-label="Decrease"
+                      icon={<Text fontSize="xs">▼</Text>}
+                      size="xs"
+                      variant="ghost"
+                      height="50%"
+                      minW="24px"
+                      borderRadius={0}
+                      onClick={() => {
+                        const current = watch('rating');
+                        if (current === undefined || current === null) {
+                          setValue('rating', 10);
+                        } else if (current <= 1) {
+                          setValue('rating', undefined);
+                        } else {
+                          setValue('rating', Math.max(1, current - 1));
+                        }
+                      }}
+                    />
+                  </Stack>
+                </Box>
+                <IconButton
+                  aria-label="Clear rating"
+                  icon={<FaTrash />}
+                  size="sm"
+                  variant="ghost"
+                  colorScheme="gray"
+                  onClick={() => setValue('rating', undefined)}
+                  isDisabled={watch('rating') === undefined || watch('rating') === null}
+                  opacity={watch('rating') !== undefined && watch('rating') !== null ? 1 : 0.4}
+                />
+              </HStack>
             </FormControl>
           ) : (
             /* Ordered status - no rating */
