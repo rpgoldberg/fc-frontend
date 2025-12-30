@@ -302,6 +302,7 @@ export type SyncPhase =
   | 'validating'
   | 'exporting'
   | 'parsing'
+  | 'fetching_lists'
   | 'queueing'
   | 'enriching'
   | 'completed'
