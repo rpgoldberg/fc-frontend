@@ -63,6 +63,8 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   } = useForm<FigureFormData>({
     defaultValues: initialData ? {
       ...initialData,
+      // Generate mfcLink from mfcId if mfcLink is empty
+      mfcLink: initialData.mfcLink || (initialData.mfcId ? `https://myfigurecollection.net/item/${initialData.mfcId}` : ''),
       // Map nested Figure fields to flat form fields
       releaseDate: initialData.releases?.[0]?.date || '',
       releasePrice: initialData.releases?.[0]?.price,
@@ -443,6 +445,8 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     if (initialData) {
       reset({
         ...initialData,
+        // Generate mfcLink from mfcId if mfcLink is empty
+        mfcLink: initialData.mfcLink || (initialData.mfcId ? `https://myfigurecollection.net/item/${initialData.mfcId}` : ''),
         // Map nested Figure fields to flat form fields
         releaseDate: initialData.releases?.[0]?.date || '',
         releasePrice: initialData.releases?.[0]?.price,
