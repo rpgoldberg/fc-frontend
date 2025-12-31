@@ -406,7 +406,6 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     // Only trigger if the link is valid and non-empty (accepts item number or full URL)
     const mfcPattern = /^https?:\/\/(?:www\.)?myfigurecollection\.net\/item\/\d+(?:\/.*)?$/i;
     const numericPattern = /^\d{4,}$/;
-    const normalizedLink = normalizeMfcLink(currentMfcLink);
     if (typeof currentMfcLink === 'string' && currentMfcLink.trim() &&
         (mfcPattern.test(currentMfcLink) || numericPattern.test(currentMfcLink.trim()))) {
 
