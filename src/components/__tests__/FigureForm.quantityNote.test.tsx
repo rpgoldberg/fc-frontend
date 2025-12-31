@@ -129,7 +129,7 @@ describe('FigureForm - Quantity Field (Schema v3.0)', () => {
       fireEvent.change(quantityInput, { target: { value: '2' } });
 
       // Submit form
-      const submitButton = screen.getByRole('button', { name: /add figure/i });
+      const submitButton = screen.getByRole('button', { name: /^save$/i });
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -221,7 +221,7 @@ describe('FigureForm - Note Field (Schema v3.0)', () => {
       await userEvent.type(noteInput, 'Bought at convention');
 
       // Submit form
-      const submitButton = screen.getByRole('button', { name: /add figure/i });
+      const submitButton = screen.getByRole('button', { name: /^save$/i });
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -240,7 +240,7 @@ describe('FigureForm - Note Field (Schema v3.0)', () => {
       await userEvent.type(screen.getByLabelText(/figure name/i), 'Test Figure');
 
       // Submit form without note
-      const submitButton = screen.getByRole('button', { name: /add figure/i });
+      const submitButton = screen.getByRole('button', { name: /^save$/i });
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -284,7 +284,7 @@ describe('FigureForm - Quantity and Note Integration', () => {
     await userEvent.type(noteInput, 'Bought 2 for collecting and display');
 
     // Submit
-    const submitButton = screen.getByRole('button', { name: /add figure/i });
+    const submitButton = screen.getByRole('button', { name: /^save$/i });
     await userEvent.click(submitButton);
 
     await waitFor(() => {

@@ -342,6 +342,69 @@ describe('FigureForm Comprehensive Tests', () => {
         imageUrl: '',
       }));
     });
+
+    it('should generate mfcLink from mfcId when mfcLink is missing in initialData', () => {
+      // This test verifies the fix for the bug where MFC ID wasn't visible on edit page
+      // When a figure has mfcId but no mfcLink, the form should generate mfcLink from mfcId
+      const figureWithMfcIdOnly = {
+        ...mockFigure,
+        mfcId: 987654,
+        mfcLink: '', // Empty mfcLink - should be generated from mfcId
+      };
+
+      render(<FigureForm initialData={figureWithMfcIdOnly} onSubmit={mockOnSubmit} isLoading={false} />);
+
+      // The form should generate mfcLink from mfcId during reset
+      expect(mockReset).toHaveBeenCalledWith(expect.objectContaining({
+        mfcLink: 'https://myfigurecollection.net/item/987654',
+      }));
+    });
+
+    it('should preserve existing mfcLink when both mfcId and mfcLink are present', () => {
+      // When figure has both mfcId and mfcLink, mfcLink should be preserved (not regenerated)
+      const figureWithBoth = {
+        ...mockFigure,
+        mfcId: 111111,
+        mfcLink: 'https://myfigurecollection.net/item/123456', // Different from mfcId
+      };
+
+      render(<FigureForm initialData={figureWithBoth} onSubmit={mockOnSubmit} isLoading={false} />);
+
+      // The existing mfcLink should be preserved, not overwritten with mfcId
+      expect(mockReset).toHaveBeenCalledWith(expect.objectContaining({
+        mfcLink: 'https://myfigurecollection.net/item/123456',
+      }));
+    });
+
+    it('should handle undefined mfcLink by generating from mfcId', () => {
+      // Edge case: mfcLink is undefined (not empty string)
+      const figureWithUndefinedMfcLink = {
+        ...mockFigure,
+        mfcId: 555555,
+        mfcLink: undefined,
+      };
+
+      render(<FigureForm initialData={figureWithUndefinedMfcLink as any} onSubmit={mockOnSubmit} isLoading={false} />);
+
+      expect(mockReset).toHaveBeenCalledWith(expect.objectContaining({
+        mfcLink: 'https://myfigurecollection.net/item/555555',
+      }));
+    });
+
+    it('should handle missing mfcId gracefully with empty mfcLink', () => {
+      // Edge case: no mfcId and no mfcLink - should result in empty mfcLink
+      const figureWithoutMfc = {
+        ...mockFigure,
+        mfcId: undefined,
+        mfcLink: '',
+      };
+
+      render(<FigureForm initialData={figureWithoutMfc as any} onSubmit={mockOnSubmit} isLoading={false} />);
+
+      expect(mockReset).toHaveBeenCalledWith(expect.objectContaining({
+        mfcLink: '',
+      }));
+    });
   });
 
   describe('Image Error Handling', () => {
