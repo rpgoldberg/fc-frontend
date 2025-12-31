@@ -7,6 +7,8 @@ export interface User {
   isAdmin: boolean;
   colorProfile?: ColorProfile;
   token?: string;
+  refreshToken?: string;
+  tokenExpiresAt?: number;  // Unix timestamp for when access token expires
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

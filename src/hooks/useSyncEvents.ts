@@ -3,6 +3,7 @@
  *
  * Manages a real-time SSE connection to the backend for sync progress updates.
  * Automatically reconnects on disconnect with exponential backoff.
+ * Updates the global syncStore for persistent banner display.
  *
  * Events received:
  * - connected: Initial state when SSE connection established
@@ -11,82 +12,54 @@
  * - sync-complete: Final sync completion (success, failure, or cancellation)
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import {
-  SyncPhase,
-  SyncJobStats,
   SseConnectedEvent,
   SseItemUpdateEvent,
   SsePhaseChangeEvent,
   SseSyncCompleteEvent,
 } from '../types';
 import { useAuthStore } from '../stores/authStore';
+import { useSyncStore } from '../stores/syncStore';
 import { createLogger } from '../utils/logger';
+import { recordUserActivity } from './useTokenRefresh';
 
 const logger = createLogger('SYNC_EVENTS');
 
 // Base URL for SSE endpoint (same as API since it's proxied)
 const SYNC_URL = process.env.REACT_APP_SYNC_URL || '/api';
 
-export type SseConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
-
 export interface UseSyncEventsOptions {
-  sessionId: string;
-  enabled?: boolean;
+  /** Called when an item finishes processing */
   onItemUpdate?: (event: SseItemUpdateEvent) => void;
+  /** Called when sync phase changes */
   onPhaseChange?: (event: SsePhaseChangeEvent) => void;
+  /** Called when sync completes (success, failure, or cancellation) */
   onComplete?: (event: SseSyncCompleteEvent) => void;
+  /** Called on SSE error */
   onError?: (error: Error) => void;
 }
 
-export interface UseSyncEventsResult {
-  /** Current SSE connection state */
-  connectionState: SseConnectionState;
-  /** Current sync phase */
-  phase: SyncPhase | null;
-  /** Current sync stats */
-  stats: SyncJobStats | null;
-  /** Current status message */
-  message: string | null;
-  /** Last error if any */
-  error: Error | null;
-  /** Manually disconnect */
-  disconnect: () => void;
-  /** Manually reconnect */
-  reconnect: () => void;
-}
-
-const DEFAULT_STATS: SyncJobStats = {
-  total: 0,
-  pending: 0,
-  processing: 0,
-  completed: 0,
-  failed: 0,
-  skipped: 0,
-};
-
 /**
  * Hook for managing SSE connection to sync progress stream.
+ * Uses the global syncStore for state management.
  */
-export function useSyncEvents({
-  sessionId,
-  enabled = true,
-  onItemUpdate,
-  onPhaseChange,
-  onComplete,
-  onError,
-}: UseSyncEventsOptions): UseSyncEventsResult {
-  const [connectionState, setConnectionState] = useState<SseConnectionState>('disconnected');
-  const [phase, setPhase] = useState<SyncPhase | null>(null);
-  const [stats, setStats] = useState<SyncJobStats | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+export function useSyncEvents(options: UseSyncEventsOptions = {}) {
+  const { onItemUpdate, onPhaseChange, onComplete, onError } = options;
+
+  const { user } = useAuthStore();
+  const {
+    sessionId,
+    isActive,
+    updateConnectionState,
+    updateProgress,
+    addFailedItem,
+    completeSync,
+  } = useSyncStore();
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptRef = useRef(0);
-
-  const { user } = useAuthStore();
 
   /**
    * Clean up EventSource connection and timers.
@@ -112,8 +85,7 @@ export function useSyncEvents({
     }
 
     cleanup();
-    setConnectionState('connecting');
-    setError(null);
+    updateConnectionState('connecting');
 
     // Construct SSE URL with auth token as query param
     // EventSource doesn't support custom headers, so we pass token in URL
@@ -129,11 +101,12 @@ export function useSyncEvents({
         const data: SseConnectedEvent = JSON.parse((e as MessageEvent).data);
         logger.info('SSE connected:', data);
 
-        setConnectionState('connected');
-        setPhase(data.phase);
-        setStats(data.stats);
-        setMessage(data.message || null);
+        updateConnectionState('connected');
+        updateProgress(data.phase, data.stats, data.message);
         reconnectAttemptRef.current = 0; // Reset reconnect counter on success
+
+        // Record activity - user is actively watching sync progress
+        recordUserActivity();
       } catch (err) {
         logger.error('Failed to parse connected event:', err);
       }
@@ -145,9 +118,17 @@ export function useSyncEvents({
         const data: SseItemUpdateEvent = JSON.parse((e as MessageEvent).data);
         logger.verbose('Item update:', data.mfcId, data.status);
 
-        setPhase(data.phase);
-        setStats(data.stats);
+        updateProgress(data.phase, data.stats);
+
+        // Track failed items
+        if (data.status === 'failed' && data.error) {
+          addFailedItem(data.mfcId, data.error);
+        }
+
         onItemUpdate?.(data);
+
+        // Record activity - each item update shows active monitoring
+        recordUserActivity();
       } catch (err) {
         logger.error('Failed to parse item-update event:', err);
       }
@@ -159,10 +140,11 @@ export function useSyncEvents({
         const data: SsePhaseChangeEvent = JSON.parse((e as MessageEvent).data);
         logger.info('Phase change:', data.phase, data.message);
 
-        setPhase(data.phase);
-        setStats(data.stats);
-        setMessage(data.message || null);
+        updateProgress(data.phase, data.stats, data.message);
         onPhaseChange?.(data);
+
+        // Record activity - phase changes indicate active sync monitoring
+        recordUserActivity();
       } catch (err) {
         logger.error('Failed to parse phase-change event:', err);
       }
@@ -174,14 +156,14 @@ export function useSyncEvents({
         const data: SseSyncCompleteEvent = JSON.parse((e as MessageEvent).data);
         logger.info('Sync complete:', data.phase);
 
-        setPhase(data.phase);
-        setStats(data.stats);
-        setMessage(data.message || null);
+        completeSync(data.phase, data.stats, data.message);
         onComplete?.(data);
+
+        // Record activity - sync completion is definitely user activity
+        recordUserActivity();
 
         // Close connection - no more events expected
         cleanup();
-        setConnectionState('disconnected');
       } catch (err) {
         logger.error('Failed to parse sync-complete event:', err);
       }
@@ -190,11 +172,11 @@ export function useSyncEvents({
     // Handle connection errors
     eventSource.onerror = () => {
       logger.warn('SSE connection error');
-      setConnectionState('error');
+      updateConnectionState('error');
 
       // Attempt reconnection with exponential backoff
       const attempt = reconnectAttemptRef.current;
-      if (attempt < 5) {
+      if (attempt < 5 && isActive) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
         logger.info(`Reconnecting in ${delay}ms (attempt ${attempt + 1})`);
 
@@ -202,54 +184,48 @@ export function useSyncEvents({
           reconnectAttemptRef.current = attempt + 1;
           connect();
         }, delay);
-      } else {
+      } else if (attempt >= 5) {
         const connectionError = new Error('SSE connection failed after multiple attempts');
-        setError(connectionError);
         onError?.(connectionError);
         cleanup();
-        setConnectionState('error');
       }
     };
-  }, [sessionId, user?.token, cleanup, onItemUpdate, onPhaseChange, onComplete, onError]);
+  }, [
+    sessionId,
+    user?.token,
+    isActive,
+    cleanup,
+    updateConnectionState,
+    updateProgress,
+    addFailedItem,
+    completeSync,
+    onItemUpdate,
+    onPhaseChange,
+    onComplete,
+    onError,
+  ]);
 
   /**
    * Manual disconnect.
    */
   const disconnect = useCallback(() => {
     cleanup();
-    setConnectionState('disconnected');
+    updateConnectionState('disconnected');
     reconnectAttemptRef.current = 0;
-  }, [cleanup]);
+  }, [cleanup, updateConnectionState]);
 
-  /**
-   * Manual reconnect.
-   */
-  const reconnect = useCallback(() => {
-    reconnectAttemptRef.current = 0;
-    connect();
-  }, [connect]);
-
-  // Connect when enabled and sessionId is available
+  // Connect when sync becomes active
   useEffect(() => {
-    if (enabled && sessionId && user?.token) {
+    if (isActive && sessionId && user?.token) {
       connect();
-    } else {
+    } else if (!isActive) {
       cleanup();
-      setConnectionState('disconnected');
     }
 
     return cleanup;
-  }, [enabled, sessionId, user?.token, connect, cleanup]);
+  }, [isActive, sessionId, user?.token, connect, cleanup]);
 
-  return {
-    connectionState,
-    phase,
-    stats: stats || DEFAULT_STATS,
-    message,
-    error,
-    disconnect,
-    reconnect,
-  };
+  return { disconnect };
 }
 
 export default useSyncEvents;

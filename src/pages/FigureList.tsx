@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import {
   Box,
@@ -30,6 +30,7 @@ import BulkImportModal from '../components/BulkImportModal';
 import MfcSyncModal from '../components/MfcSyncModal';
 import MfcCookiesModal from '../components/MfcCookiesModal';
 import SortControls, { SortField, SortDirection, SortParams } from '../components/SortControls';
+import { useSyncStore } from '../stores/syncStore';
 
 const FigureList: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -41,6 +42,40 @@ const FigureList: React.FC = () => {
   const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
   const { isOpen: isSyncOpen, onOpen: onSyncOpen, onClose: onSyncClose } = useDisclosure();
   const { isOpen: isCookiesOpen, onOpen: onCookiesOpen, onClose: onCookiesClose } = useDisclosure();
+
+  // Subscribe to sync store for auto-refresh
+  const { stats, phase, isActive } = useSyncStore();
+  const lastCompletedCountRef = useRef<number>(0);
+
+  // Auto-refresh figures when sync completes items
+  useEffect(() => {
+    if (!stats) {
+      lastCompletedCountRef.current = 0;
+      return;
+    }
+
+    const currentCompleted = stats.completed;
+    const lastCompleted = lastCompletedCountRef.current;
+
+    // Refresh when completed count increases (new items processed)
+    // Use a threshold to batch refreshes (every 5 items or on completion)
+    if (currentCompleted > lastCompleted) {
+      const delta = currentCompleted - lastCompleted;
+      const shouldRefresh = delta >= 5 || phase === 'completed' || !isActive;
+
+      if (shouldRefresh) {
+        queryClient.invalidateQueries(['figures']);
+        lastCompletedCountRef.current = currentCompleted;
+      }
+    }
+  }, [stats, phase, isActive, queryClient]);
+
+  // Also refresh immediately when sync completes
+  useEffect(() => {
+    if (phase === 'completed') {
+      queryClient.invalidateQueries(['figures']);
+    }
+  }, [phase, queryClient]);
 
   const handleImportComplete = () => {
     // Invalidate the figures query to refresh the list
@@ -70,12 +105,12 @@ const FigureList: React.FC = () => {
       },
     }
   ) || { data: null, isLoading: false, error: null };
-  
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     window.scrollTo(0, 0);
   };
-  
+
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
     setPage(1);
@@ -113,25 +148,7 @@ const FigureList: React.FC = () => {
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">Your Figures</Heading>
         <HStack spacing={3}>
-          <Menu>
-            <MenuButton
-              as={Button}
-              leftIcon={<FaFileImport />}
-              rightIcon={<Icon as={FaChevronDown} />}
-              colorScheme="purple"
-              variant="outline"
-            >
-              Import from MFC
-            </MenuButton>
-            <MenuList>
-              <MenuItem icon={<Icon as={FaFileImport} />} onClick={onImportOpen}>
-                Import CSV File
-              </MenuItem>
-              <MenuItem icon={<Icon as={FaSync} />} onClick={onSyncOpen}>
-                Sync MFC Account
-              </MenuItem>
-            </MenuList>
-          </Menu>
+          {/* Add Figure button first (left) */}
           <Button
             as={RouterLink}
             to="/figures/add"
@@ -140,6 +157,26 @@ const FigureList: React.FC = () => {
           >
             Add Figure
           </Button>
+          {/* Sync with MFC dropdown second (right) */}
+          <Menu>
+            <MenuButton
+              as={Button}
+              leftIcon={<FaSync />}
+              rightIcon={<Icon as={FaChevronDown} />}
+              colorScheme="purple"
+              variant="outline"
+            >
+              Sync with MFC
+            </MenuButton>
+            <MenuList>
+              <MenuItem icon={<Icon as={FaSync} />} onClick={onSyncOpen}>
+                Sync MFC Account
+              </MenuItem>
+              <MenuItem icon={<Icon as={FaFileImport} />} onClick={onImportOpen}>
+                Import CSV File
+              </MenuItem>
+            </MenuList>
+          </Menu>
         </HStack>
       </Flex>
 
@@ -173,7 +210,7 @@ const FigureList: React.FC = () => {
               <FigureCard key={figure._id} figure={figure} />
             ))}
           </SimpleGrid>
-          
+
           <Pagination
             currentPage={page}
             totalPages={data?.pages || 1}
