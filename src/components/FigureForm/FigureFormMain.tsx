@@ -337,18 +337,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
     return true;
   };
 
-  const validateManufacturer = (value: string | undefined) => {
-    const mfcLinkValue = getValues('mfcLink');
-    if (mfcLinkValue && mfcLinkValue.trim()) {
-      // If MFC link is present, manufacturer can be empty (will be populated from scraping)
-      return true;
-    }
-    // Otherwise, manufacturer is required
-    if (!value || !value.trim()) {
-      return 'Manufacturer is required';
-    }
-    return true;
-  };
+  // Note: validateManufacturer removed - Schema v3 uses companyRoles instead
   const formatScale = (input: string) => {
     // Convert to fraction format (e.g., 1/8, 1/7, etc.)
     if (!input.includes('/')) {
@@ -433,10 +422,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
             setValue('imageUrl', result.data.imageUrl, { shouldValidate: true, shouldDirty: true });
             fieldsPopulated++;
           }
-          if (!currentValues.manufacturer && result.data.manufacturer) {
-            setValue('manufacturer', result.data.manufacturer, { shouldValidate: true, shouldDirty: true });
-            fieldsPopulated++;
-          }
+          // Note: Legacy manufacturer field removed - now using companyRoles (Schema v3)
           if (!currentValues.name && result.data.name) {
             setValue('name', result.data.name, { shouldValidate: true, shouldDirty: true });
             fieldsPopulated++;
@@ -815,11 +801,18 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
               mfcLink={mfcLink}
               imageUrl={imageUrl}
               handleScaleBlur={handleScaleBlur}
-              validateManufacturer={validateManufacturer}
               validateName={validateName}
               validateUrl={validateUrl}
               openImageLink={openImageLink}
             />
+
+            {/* Schema v3: Company & Artist Roles - Primary data from MFC */}
+            <Box mt={6}>
+              <CompanyRolesSection />
+            </Box>
+            <Box mt={4}>
+              <ArtistRolesSection />
+            </Box>
 
             {/* Collection Details Section - Extracted Component */}
             <CollectionDetailsSection
@@ -835,16 +828,12 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
               watch={watch}
             />
 
-            {/* Schema v3 Array Sections */}
+            {/* Schema v3: Release Information */}
             <Box mt={6} pt={6} borderTopWidth="1px" borderColor="gray.200">
               <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.700">
-                Detailed Information
+                Release Information
               </Text>
-              <VStack spacing={6} align="stretch">
-                <CompanyRolesSection />
-                <ArtistRolesSection />
-                <ReleasesSection />
-              </VStack>
+              <ReleasesSection />
             </Box>
 
             <HStack mt={4} spacing={4}>

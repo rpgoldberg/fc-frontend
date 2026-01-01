@@ -2,7 +2,8 @@
  * Core Fields Section Component
  *
  * Extracted from FigureForm.tsx to keep modules under 750 lines.
- * Contains manufacturer, name, scale, location, storage detail, JAN, and image URL fields.
+ * Contains name, scale, location, storage detail, and image URL fields.
+ * Note: Company roles have been moved to their own section (Schema v3).
  * Note: Image preview is now rendered in FigureFormMain as a sticky sidebar.
  */
 import React from 'react';
@@ -30,7 +31,6 @@ interface CoreFieldsSectionProps {
   mfcLink: string | undefined;
   imageUrl: string | undefined;
   handleScaleBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-  validateManufacturer: (value: string | undefined) => true | string;
   validateName: (value: string | undefined) => true | string;
   validateUrl: (value: string | undefined) => true | string;
   openImageLink: () => void;
@@ -42,28 +42,12 @@ const CoreFieldsSection: React.FC<CoreFieldsSectionProps> = ({
   mfcLink,
   imageUrl,
   handleScaleBlur,
-  validateManufacturer,
   validateName,
   validateUrl,
   openImageLink,
 }) => {
   return (
     <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }} gap={6}>
-      <GridItem>
-        <FormControl isInvalid={!!errors.manufacturer}>
-          <FormLabel>
-            Manufacturer
-            {!mfcLink && <Text as="span" color="red.500" ml={1} aria-label="required">*</Text>}
-          </FormLabel>
-          <Input
-            {...register('manufacturer', { validate: validateManufacturer })}
-            placeholder="e.g., Good Smile Company"
-            aria-describedby={errors.manufacturer ? "manufacturer-error" : undefined}
-          />
-          <FormErrorMessage id="manufacturer-error" data-testid="form-error-message">{errors.manufacturer?.message}</FormErrorMessage>
-        </FormControl>
-      </GridItem>
-
       <GridItem>
         <FormControl isInvalid={!!errors.name}>
           <FormLabel>
@@ -130,27 +114,6 @@ const CoreFieldsSection: React.FC<CoreFieldsSectionProps> = ({
           <Input
             {...register('storageDetail')}
             placeholder="e.g., Shelf A-3, Box #12, Left corner"
-          />
-        </FormControl>
-      </GridItem>
-
-      <GridItem>
-        <FormControl>
-          <FormLabel>
-            JAN/UPC/EAN
-            <Tooltip label="Product barcode number from packaging">
-              <IconButton
-                aria-label="Barcode info"
-                icon={<FaQuestionCircle />}
-                size="xs"
-                variant="ghost"
-                ml={1}
-              />
-            </Tooltip>
-          </FormLabel>
-          <Input
-            {...register('jan')}
-            placeholder="e.g., 4571245296115"
           />
         </FormControl>
       </GridItem>
