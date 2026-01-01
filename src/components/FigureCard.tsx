@@ -7,6 +7,32 @@ import { deleteFigure } from '../api';
 import { useMutation, useQueryClient } from 'react-query';
 import { getDisplayCompanyName } from '../utils/statsUtils';
 
+/**
+ * Extract MFC item ID from either a full URL or just an ID string.
+ * Examples:
+ *   "https://myfigurecollection.net/item/2111017" -> "2111017"
+ *   "2724644" -> "2724644"
+ */
+const extractMfcId = (mfcLink: string): string | null => {
+  if (!mfcLink) return null;
+
+  // If it's a URL, extract the ID from the path
+  const urlMatch = mfcLink.match(/myfigurecollection\.net\/item\/(\d+)/);
+  if (urlMatch) return urlMatch[1];
+
+  // If it's just digits, return as-is
+  if (/^\d+$/.test(mfcLink.trim())) return mfcLink.trim();
+
+  return null;
+};
+
+/**
+ * Build the full MFC URL from an ID.
+ */
+const buildMfcUrl = (mfcId: string): string => {
+  return `https://myfigurecollection.net/item/${mfcId}`;
+};
+
 interface FigureCardProps {
   figure: Figure;
   searchQuery?: string;
@@ -131,17 +157,16 @@ const FigureCard: React.FC<FigureCardProps> = ({ figure, searchQuery }) => {
       </Link>
 
       <Box p={4}>
-        {figure.mfcLink && (
-          <Link 
-            href={figure.mfcLink} 
-            isExternal 
-            fontSize="xs" 
-            color="blue.500" 
-            display="block" 
+        {figure.mfcLink && extractMfcId(figure.mfcLink) && (
+          <Link
+            href={buildMfcUrl(extractMfcId(figure.mfcLink)!)}
+            isExternal
+            fontSize="xs"
+            color="blue.500"
+            display="block"
             mb={2}
-            noOfLines={1}
           >
-            MFC: {figure.mfcLink}
+            MFC: {extractMfcId(figure.mfcLink)}
           </Link>
         )}
         <Link
