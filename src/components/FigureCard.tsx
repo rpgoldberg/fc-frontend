@@ -5,6 +5,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import { Figure } from '../types';
 import { deleteFigure } from '../api';
 import { useMutation, useQueryClient } from 'react-query';
+import { getDisplayCompanyName } from '../utils/statsUtils';
 
 interface FigureCardProps {
   figure: Figure;
@@ -156,7 +157,10 @@ const FigureCard: React.FC<FigureCardProps> = ({ figure, searchQuery }) => {
           <HighlightedText text={figure.name} query={searchQuery} />
         </Link>
         <Text fontSize="sm" color="gray.600" mb={2}>
-          <HighlightedText text={figure.manufacturer || ''} query={searchQuery} />
+          <HighlightedText
+            text={getDisplayCompanyName(figure.companyRoles, figure.manufacturer)}
+            query={searchQuery}
+          />
         </Text>
         <Badge colorScheme="brand" mb={2}>
           {figure.scale}

@@ -20,6 +20,20 @@ jest.mock('../../hooks/usePublicConfig', () => ({
   }),
 }));
 
+// Mock useLookupData hook
+jest.mock('../../hooks/useLookupData', () => ({
+  useLookupData: () => ({
+    roleTypes: [
+      { _id: 'role1', name: 'Manufacturer', kind: 'company' },
+      { _id: 'role2', name: 'Sculptor', kind: 'artist' },
+    ],
+    companies: [],
+    artists: [],
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock crypto utilities
 jest.mock('../../utils/crypto', () => ({
   storeMfcCookies: jest.fn(),

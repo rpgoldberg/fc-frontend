@@ -162,6 +162,40 @@ export interface FigureFormData {
   figureConditionNotes?: string;
   boxCondition?: BoxCondition;
   boxConditionNotes?: string;
+
+  // Schema v3.0 - Array sections for form
+  companyRoles?: ICompanyRoleFormData[];
+  artistRoles?: IArtistRoleFormData[];
+  releases?: IReleaseFormData[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Form Array Section Types (Schema v3.0)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// For company role editing - companyId is optional for new companies
+export interface ICompanyRoleFormData {
+  companyId?: string;      // Optional: set when selecting existing company
+  companyName: string;     // Required: company name (user can type new)
+  roleId: string;          // Required: role type (Manufacturer, Distributor, etc.)
+  roleName?: string;       // Display only: resolved role name
+}
+
+// For artist role editing - artistId is optional for new artists
+export interface IArtistRoleFormData {
+  artistId?: string;       // Optional: set when selecting existing artist
+  artistName: string;      // Required: artist name (user can type new)
+  roleId: string;          // Required: role type (Sculptor, Illustrator, etc.)
+  roleName?: string;       // Display only: resolved role name
+}
+
+// For release editing - more flexible than IRelease
+export interface IReleaseFormData {
+  date?: string;           // Release date (YYYY-MM-DD or YYYY-MM)
+  price?: number;          // Price amount
+  currency?: string;       // Currency code (JPY, USD, EUR)
+  jan?: string;            // JAN/UPC/EAN barcode (10-13 digits)
+  isRerelease?: boolean;   // True if this is a rerelease
 }
 
 export interface PaginatedResponse<T> {
@@ -190,6 +224,8 @@ export interface StatsData {
   manufacturerStats: { _id: string; count: number }[];
   scaleStats: { _id: string; count: number }[];
   locationStats: { _id: string; count: number }[];
+  // Schema v3.0 - Company stats from companyRoles array
+  companyStats?: { _id: string; roleName?: string; count: number }[];
 }
 
 export interface SystemConfig {

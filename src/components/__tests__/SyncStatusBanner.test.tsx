@@ -215,7 +215,8 @@ describe('SyncStatusBanner', () => {
 
       render(<SyncStatusBanner />);
 
-      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+      // Button displays "Abort" text
+      expect(screen.getByRole('button', { name: /abort/i })).toBeInTheDocument();
     });
 
     it('should not show cancel button when sync is not active', () => {
@@ -228,7 +229,7 @@ describe('SyncStatusBanner', () => {
 
       render(<SyncStatusBanner />);
 
-      expect(screen.queryByRole('button', { name: /^cancel$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^abort$/i })).not.toBeInTheDocument();
     });
 
     it('should call cancelSyncJob and cancelSync on cancel button click', async () => {
@@ -244,7 +245,7 @@ describe('SyncStatusBanner', () => {
 
       render(<SyncStatusBanner />);
 
-      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      const cancelButton = screen.getByRole('button', { name: /abort/i });
       await user.click(cancelButton);
 
       expect(mockedCancelSyncJob).toHaveBeenCalledWith('cancel-test-session');
@@ -270,7 +271,7 @@ describe('SyncStatusBanner', () => {
 
       render(<SyncStatusBanner />);
 
-      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      const cancelButton = screen.getByRole('button', { name: /abort/i });
       await user.click(cancelButton);
 
       await waitFor(() => {

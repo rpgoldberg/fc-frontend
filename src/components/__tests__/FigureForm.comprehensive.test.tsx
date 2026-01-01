@@ -13,6 +13,20 @@ jest.mock('../../hooks/usePublicConfig', () => ({
   }),
 }));
 
+// Mock useLookupData hook
+jest.mock('../../hooks/useLookupData', () => ({
+  useLookupData: () => ({
+    roleTypes: [
+      { _id: 'role1', name: 'Manufacturer', kind: 'company' },
+      { _id: 'role2', name: 'Sculptor', kind: 'artist' },
+    ],
+    companies: [],
+    artists: [],
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
@@ -49,7 +63,19 @@ jest.mock('react-hook-form', () => ({
     getValues: mockGetValues,
     reset: mockReset,
     formState: { errors: {} },
+    control: {},
   }),
+  FormProvider: ({ children }: any) => children,
+  useFormContext: () => ({
+    register: jest.fn((name) => ({ name, onChange: jest.fn(), onBlur: jest.fn(), ref: jest.fn() })),
+    control: {},
+  }),
+  useFieldArray: () => ({
+    fields: [],
+    append: jest.fn(),
+    remove: jest.fn(),
+  }),
+  Controller: ({ render }: any) => render({ field: { value: false, onChange: jest.fn() } }),
 }));
 
 describe('FigureForm Comprehensive Tests', () => {
@@ -110,13 +136,15 @@ describe('FigureForm Comprehensive Tests', () => {
     it('should show loading state when isLoading is true', () => {
       render(<FigureForm onSubmit={mockOnSubmit} isLoading={true} />);
 
-      // Look for any submit button (text might vary)
+      // Look specifically for the Save/Submit button, not Add buttons from array sections
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(btn =>
-        btn.textContent?.toLowerCase().includes('save') ||
-        btn.textContent?.toLowerCase().includes('submit') ||
-        btn.textContent?.toLowerCase().includes('add')
-      );
+      const submitButton = buttons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+        // Match Save/Submit but exclude Add buttons for array sections
+        return (text.includes('save') || text.includes('submit') || ariaLabel.includes('save')) &&
+               !text.includes('add company') && !text.includes('add artist') && !text.includes('add release');
+      });
 
       if (submitButton) {
         expect(submitButton).toBeDisabled();
@@ -278,13 +306,15 @@ describe('FigureForm Comprehensive Tests', () => {
     it('should disable submit button when loading', () => {
       render(<FigureForm onSubmit={mockOnSubmit} isLoading={true} />);
 
-      // Same as the loading test above
+      // Look specifically for the Save/Submit button, not Add buttons from array sections
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(btn =>
-        btn.textContent?.toLowerCase().includes('save') ||
-        btn.textContent?.toLowerCase().includes('submit') ||
-        btn.textContent?.toLowerCase().includes('add')
-      );
+      const submitButton = buttons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+        // Match Save/Submit but exclude Add buttons for array sections
+        return (text.includes('save') || text.includes('submit') || ariaLabel.includes('save')) &&
+               !text.includes('add company') && !text.includes('add artist') && !text.includes('add release');
+      });
 
       if (submitButton) {
         expect(submitButton).toBeDisabled();

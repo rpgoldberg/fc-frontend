@@ -17,6 +17,20 @@ jest.mock('../../hooks/usePublicConfig', () => ({
   }),
 }));
 
+// Mock useLookupData hook
+jest.mock('../../hooks/useLookupData', () => ({
+  useLookupData: () => ({
+    roleTypes: [
+      { _id: 'role1', name: 'Manufacturer', kind: 'company' },
+      { _id: 'role2', name: 'Sculptor', kind: 'artist' },
+    ],
+    companies: [],
+    artists: [],
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
@@ -454,12 +468,15 @@ describe('FigureForm Targeted Coverage', () => {
     it('should handle loading state button conditions', () => {
       renderFigureForm({ isLoading: true });
 
+      // Look specifically for the Save/Submit button, not Add buttons from array sections
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(btn =>
-        btn.textContent?.toLowerCase().includes('save') ||
-        btn.textContent?.toLowerCase().includes('submit') ||
-        btn.textContent?.toLowerCase().includes('add')
-      );
+      const submitButton = buttons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+        // Match Save/Submit but exclude Add buttons for array sections
+        return (text.includes('save') || text.includes('submit') || ariaLabel.includes('save')) &&
+               !text.includes('add company') && !text.includes('add artist') && !text.includes('add release');
+      });
 
       if (submitButton) {
         expect(submitButton).toBeDisabled();

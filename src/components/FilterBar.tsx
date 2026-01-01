@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Flex,
@@ -15,6 +15,7 @@ import {
 import { FaFilter, FaTimes } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 import { getFigureStats } from '../api';
+import { mergeCompanyStats } from '../utils/statsUtils';
 
 interface FilterValues {
   manufacturer?: string;
@@ -35,6 +36,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
   const { data: stats } = useQuery('figureStats', getFigureStats, {
     enabled: isOpen,
   });
+
+  // Merge legacy manufacturerStats with Schema v3 companyStats
+  const mergedManufacturerStats = useMemo(() => {
+    if (!stats) return [];
+    return mergeCompanyStats(stats.manufacturerStats, stats.companyStats);
+  }, [stats]);
 
   const filterBg = useColorModeValue('white', 'gray.800');
 
@@ -130,13 +137,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter, initialFilters = {} }) 
                 onChange={handleSelectChange}
                 size="sm"
               >
-                {stats?.manufacturerStats
-                  .filter(({ _id }) => _id != null && _id !== '')
-                  .map(({ _id, count }) => (
-                    <option key={_id} value={_id}>
-                      {_id} ({count})
-                    </option>
-                  ))}
+                {mergedManufacturerStats.map(({ _id, count, roleName }) => (
+                  <option key={_id} value={_id}>
+                    {_id} ({count}){roleName ? ` - ${roleName}` : ''}
+                  </option>
+                ))}
               </Select>
             </FormControl>
 

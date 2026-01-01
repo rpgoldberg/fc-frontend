@@ -21,11 +21,14 @@ import {
   AspectRatio,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { FaLink } from 'react-icons/fa';
 import CoreFieldsSection from './CoreFieldsSection';
 import CollectionDetailsSection from './CollectionDetailsSection';
 import CatalogPurchaseSection from './CatalogPurchaseSection';
+import CompanyRolesSection from './CompanyRolesSection';
+import ArtistRolesSection from './ArtistRolesSection';
+import ReleasesSection from './ReleasesSection';
 import { Figure, FigureFormData, CollectionStatus } from '../../types';
 import { retrieveMfcCookies } from '../../utils/crypto';
 
@@ -52,15 +55,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   const previewBg = useColorModeValue('gray.50', 'gray.700');
   const placeholderColor = useColorModeValue('gray.400', 'gray.500');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-    getValues,
-    reset,
-  } = useForm<FigureFormData>({
+  const methods = useForm<FigureFormData>({
     defaultValues: initialData ? {
       ...initialData,
       // Generate mfcLink from mfcId if mfcLink is empty
@@ -77,6 +72,26 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
       purchaseCurrency: initialData.purchaseInfo?.currency || 'USD',
       merchantName: initialData.merchant?.name || '',
       merchantUrl: initialData.merchant?.url || '',
+      // Schema v3 array fields
+      companyRoles: initialData.companyRoles?.map(cr => ({
+        companyId: cr.companyId,
+        companyName: cr.companyName || '',
+        roleId: cr.roleId,
+        roleName: cr.roleName,
+      })) || [],
+      artistRoles: initialData.artistRoles?.map(ar => ({
+        artistId: ar.artistId,
+        artistName: ar.artistName || '',
+        roleId: ar.roleId,
+        roleName: ar.roleName,
+      })) || [],
+      releases: initialData.releases?.map(r => ({
+        date: r.date,
+        price: r.price,
+        currency: r.currency,
+        jan: r.jan,
+        isRerelease: r.isRerelease,
+      })) || [],
     } : {
       manufacturer: '',
       name: '',
@@ -108,8 +123,22 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
       figureConditionNotes: '',
       boxCondition: undefined,
       boxConditionNotes: '',
+      // Schema v3 array fields
+      companyRoles: [],
+      artistRoles: [],
+      releases: [],
     },
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    getValues,
+    reset,
+  } = methods;
 
   const toast = useToast();
   const mfcLink = watch('mfcLink');
@@ -610,6 +639,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   }, [isLoading, loadingAction, pendingAction, resetFormForAddAnother]);
 
   return (
+    <FormProvider {...methods}>
     <Box as="form" onSubmit={handleSubmit(handleFormSubmit)} role="form" aria-labelledby="figure-form-title">
       <Text id="figure-form-title" fontSize="xl" fontWeight="bold" className="sr-only">
         {initialData ? 'Edit Figure Form' : 'Add Figure Form'}
@@ -698,6 +728,18 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
               watch={watch}
             />
 
+            {/* Schema v3 Array Sections */}
+            <Box mt={6} pt={6} borderTopWidth="1px" borderColor="gray.200">
+              <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.700">
+                Detailed Information
+              </Text>
+              <VStack spacing={6} align="stretch">
+                <CompanyRolesSection />
+                <ArtistRolesSection />
+                <ReleasesSection />
+              </VStack>
+            </Box>
+
             <HStack mt={4} spacing={4}>
               <Button
                 colorScheme="brand"
@@ -785,6 +827,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
         </GridItem>
       </Grid>
     </Box>
+    </FormProvider>
   );
 };
 
