@@ -115,8 +115,10 @@ export async function decrypt(ciphertext: string): Promise<string> {
 
 /**
  * Storage types for MFC cookies
+ * - session: Stored in sessionStorage, cleared on logout
+ * - persistent: Encrypted and stored in localStorage until manually cleared
  */
-export type StorageType = 'one-time' | 'session' | 'persistent';
+export type StorageType = 'session' | 'persistent';
 
 const STORAGE_KEY = 'mfc_auth_encrypted';
 const STORAGE_TYPE_KEY = 'mfc_auth_storage_type';
@@ -130,11 +132,6 @@ export async function storeMfcCookies(
 ): Promise<void> {
   // Clear any existing storage first
   clearMfcCookies();
-
-  // One-time storage: don't persist anywhere (only kept in component state)
-  if (storageType === 'one-time') {
-    return; // Don't store to sessionStorage or localStorage
-  }
 
   const storage = storageType === 'persistent' ? localStorage : sessionStorage;
 
@@ -154,7 +151,7 @@ export async function storeMfcCookies(
  * Retrieves stored MFC cookies
  */
 export async function retrieveMfcCookies(): Promise<string | null> {
-  // Check sessionStorage first (one-time or session)
+  // Check sessionStorage first (session storage)
   let cookies = sessionStorage.getItem(STORAGE_KEY);
   let storageType = sessionStorage.getItem(STORAGE_TYPE_KEY);
 

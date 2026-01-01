@@ -17,6 +17,20 @@ jest.mock('../../hooks/usePublicConfig', () => ({
   }),
 }));
 
+// Mock useLookupData hook
+jest.mock('../../hooks/useLookupData', () => ({
+  useLookupData: () => ({
+    roleTypes: [
+      { _id: 'role1', name: 'Manufacturer', kind: 'company' },
+      { _id: 'role2', name: 'Sculptor', kind: 'artist' },
+    ],
+    companies: [],
+    artists: [],
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Mock window.open
 const mockOpen = jest.fn();
 window.open = mockOpen;
@@ -52,7 +66,7 @@ describe('FigureForm Real Coverage Tests', () => {
       renderFigureForm();
 
       // Enter an MFC link
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Find and click the MFC link button
@@ -124,7 +138,7 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should validate MFC URLs specifically', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Test invalid MFC URL
       await userEvent.type(mfcInput, 'https://example.com/item/123');
@@ -144,7 +158,7 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should accept valid MFC URLs', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Should not show error for valid MFC URL
@@ -173,7 +187,7 @@ describe('FigureForm Real Coverage Tests', () => {
       renderFigureForm({ onSubmit });
 
       // Add MFC link
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Should allow submission even without name/manufacturer
@@ -233,7 +247,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Wait for debounce and fetch
@@ -259,7 +273,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/999999');
 
       // Wait for fetch to be called
@@ -276,7 +290,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Wait for fetch attempt
@@ -303,7 +317,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Look for spinner after debounce
@@ -327,7 +341,7 @@ describe('FigureForm Real Coverage Tests', () => {
 
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Wait for fetch
@@ -345,11 +359,9 @@ describe('FigureForm Real Coverage Tests', () => {
       const onSubmit = jest.fn();
       renderFigureForm({ onSubmit });
 
-      // Fill required fields
-      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
+      // Fill required field (manufacturer field was removed from form in Schema v3)
       const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
 
-      await userEvent.type(manufacturerInput, 'Test Manufacturer');
       await userEvent.type(nameInput, 'Test Figure');
 
       // Submit form
@@ -360,7 +372,6 @@ describe('FigureForm Real Coverage Tests', () => {
         // onSubmit is now called with (data, addAnother)
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
-            manufacturer: 'Test Manufacturer',
             name: 'Test Figure',
           }),
           expect.any(Boolean) // addAnother flag
@@ -371,12 +382,15 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should disable submit when loading', () => {
       renderFigureForm({ isLoading: true });
 
+      // Look specifically for the Save/Submit button, not Add buttons from array sections
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(btn =>
-        btn.textContent?.toLowerCase().includes('save') ||
-        btn.textContent?.toLowerCase().includes('submit') ||
-        btn.textContent?.toLowerCase().includes('add')
-      );
+      const submitButton = buttons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        const ariaLabel = btn.getAttribute('aria-label')?.toLowerCase() || '';
+        // Match Save/Submit but exclude Add buttons for array sections
+        return (text.includes('save') || text.includes('submit') || ariaLabel.includes('save')) &&
+               !text.includes('add company') && !text.includes('add artist') && !text.includes('add release');
+      });
 
       if (submitButton) {
         expect(submitButton).toBeDisabled();
@@ -393,7 +407,7 @@ describe('FigureForm Real Coverage Tests', () => {
         new Promise(() => {}) // Never resolves
       );
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123456');
 
       // Unmount should not cause errors
@@ -405,7 +419,7 @@ describe('FigureForm Real Coverage Tests', () => {
     it('should debounce MFC scraping requests', async () => {
       renderFigureForm();
 
-      const mfcInput = screen.getByPlaceholderText(/myfigurecollection\.net/i);
+      const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
 
       // Type rapidly
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/1');

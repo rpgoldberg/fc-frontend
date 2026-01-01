@@ -65,9 +65,11 @@ describe('FigureCard', () => {
     it('should render MFC link when provided', () => {
       render(<FigureCard figure={mockFigureWithAllData} />);
 
-      const mfcLink = screen.getByText(`MFC: ${mockFigureWithAllData.mfcLink}`);
+      // Should display just the ID, not the full URL
+      const mfcLink = screen.getByText('MFC: 123');
       expect(mfcLink).toBeInTheDocument();
-      expect(mfcLink.closest('a')).toHaveAttribute('href', mockFigureWithAllData.mfcLink);
+      // But href should be the full URL
+      expect(mfcLink.closest('a')).toHaveAttribute('href', 'https://myfigurecollection.net/item/123');
       expect(mfcLink.closest('a')).toHaveAttribute('target', '_blank');
     });
 

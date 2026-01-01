@@ -16,9 +16,12 @@ import {
   Grid,
   GridItem,
   useColorModeValue,
+  useDisclosure,
+  HStack,
 } from '@chakra-ui/react';
-import { FaCube, FaPlus, FaSearch, FaChartBar, FaBoxOpen } from 'react-icons/fa';
-import { useQuery } from 'react-query';
+import { FaCube, FaPlus, FaSearch, FaChartBar, FaBoxOpen, FaSync } from 'react-icons/fa';
+import MfcSyncModal from '../components/MfcSyncModal';
+import { useQuery, useQueryClient } from 'react-query';
 import { getFigures, getFigureStats } from '../api';
 import FigureCard from '../components/FigureCard';
 import SearchBar from '../components/SearchBar';
@@ -26,10 +29,18 @@ import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const cardBg = useColorModeValue('white', 'gray.800');
+  const { isOpen: isSyncOpen, onOpen: onSyncOpen, onClose: onSyncClose } = useDisclosure();
 
   const { data: figuresData } = useQuery('recentFigures', () => getFigures(1, 4)) || {};
   const { data: statsData } = useQuery('dashboardStats', getFigureStats) || {};
+
+  const handleSyncComplete = () => {
+    // Refresh dashboard data after sync
+    queryClient.invalidateQueries(['recentFigures']);
+    queryClient.invalidateQueries(['dashboardStats']);
+  };
   
   const handleSearch = (query: string) => {
     navigate(`/search?q=${encodeURIComponent(query)}`);
@@ -37,7 +48,29 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
-      <Heading size="lg" mb={6}>Dashboard</Heading>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="lg">Dashboard</Heading>
+        <HStack spacing={3}>
+          <Button
+            as={RouterLink}
+            to="/figures/add"
+            leftIcon={<FaPlus />}
+            colorScheme="brand"
+            size="sm"
+          >
+            Add Figure
+          </Button>
+          <Button
+            leftIcon={<FaSync />}
+            colorScheme="purple"
+            variant="outline"
+            size="sm"
+            onClick={onSyncOpen}
+          >
+            Sync with MFC
+          </Button>
+        </HStack>
+      </Flex>
 
       <Box mb={8}>
         <SearchBar onSearch={handleSearch} placeholder="Search your entire collection..." />
@@ -183,6 +216,12 @@ const Dashboard: React.FC = () => {
           </Box>
         </GridItem>
       </Grid>
+
+      <MfcSyncModal
+        isOpen={isSyncOpen}
+        onClose={onSyncClose}
+        onSyncComplete={handleSyncComplete}
+      />
     </Box>
   );
 };

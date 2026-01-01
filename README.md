@@ -13,6 +13,7 @@ React frontend for the Figure Collector application. Provides a user interface f
 - Version display with service health status
 - Real-time service health monitoring
 - **MFC Cookie Authentication** - Secure storage for accessing NSFW and private content
+- **MFC Bulk Import with SSE** - Real-time sync progress via Server-Sent Events
 - **Terminal Retro Theme** - DOS/Osbourne-inspired green/orange theme with Matrix easter egg
 
 ## Terminal Retro Theme
@@ -100,6 +101,34 @@ The frontend supports optional MyFigureCollection (MFC) cookie authentication fo
 - **Profile Dashboard**: `src/pages/Profile.tsx` - Cookie status and controls
 - **Navbar Indicator**: `src/components/Navbar.tsx` - CookieStatusIndicator
 - **Auto-cleanup**: `src/stores/authStore.ts` - Logout hook
+
+## MFC Bulk Import with SSE
+
+Real-time synchronization of your MFC collection using Server-Sent Events (SSE) for live progress updates.
+
+### Features
+
+- **Real-time Progress**: Live updates as each figure is processed
+- **Phase Tracking**: Visual indicators for validation → export → parsing → queueing → enrichment → complete
+- **Item Statistics**: Running counts of pending, processing, completed, failed, and skipped items
+- **Cancel Support**: Abort sync at any time with immediate feedback
+- **Auto-Reconnect**: Automatic SSE reconnection on connection loss
+
+### How It Works
+
+1. **Start Sync**: Click "Sync from MFC" and provide your session cookies
+2. **CSV Export**: Scraper fetches your collection CSV from MFC
+3. **Queue Processing**: Items are queued with priority ordering
+4. **Live Enrichment**: Each figure is scraped with real-time status updates via SSE
+5. **Completion**: Summary shows enriched, skipped, and failed counts
+
+### Technical Implementation
+
+- **SSE Hook**: `src/hooks/useSyncEvents.ts` - Manages EventSource connection lifecycle
+- **Types**: `src/types/index.ts` - SSE event interfaces (SyncPhase, SyncItemStatus, etc.)
+- **API Client**: `src/api/scraper.ts` - Sync job management (create, get, cancel)
+- **UI Component**: `src/components/MfcSyncModal.tsx` - Progress modal with live updates
+- **Token Auth**: SSE uses query param token (`?token=<jwt>`) since EventSource can't set headers
 
 ## Technology Stack
 
