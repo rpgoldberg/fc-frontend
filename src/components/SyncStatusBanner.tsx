@@ -30,9 +30,11 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaTimesCircle,
+  FaPlay,
+  FaForward,
 } from 'react-icons/fa';
 import { useSyncStore } from '../stores/syncStore';
-import { cancelSyncJob } from '../api/scraper';
+import { cancelSyncJob, resumeSyncSession, cancelFailedItems } from '../api/scraper';
 import { SyncPhase } from '../types';
 
 /**
@@ -94,8 +96,10 @@ const SyncStatusBanner: React.FC = () => {
     stats,
     message,
     failedItems,
+    isPaused,
     cancelSync,
     reset,
+    setIsPaused,
   } = useSyncStore();
 
   // Colors
@@ -127,6 +131,32 @@ const SyncStatusBanner: React.FC = () => {
       } catch (error) {
         console.error('Failed to cancel sync:', error);
         cancelSync(); // Cancel locally anyway
+      }
+    }
+  };
+
+  // Handle resume (when paused due to failures)
+  const handleResume = async () => {
+    if (sessionId) {
+      try {
+        await resumeSyncSession(sessionId);
+        setIsPaused(false);
+      } catch (error) {
+        console.error('Failed to resume sync:', error);
+      }
+    }
+  };
+
+  // Handle skip failed items
+  const handleSkipFailed = async () => {
+    if (sessionId) {
+      try {
+        const skippedCount = await cancelFailedItems(sessionId);
+        console.log(`Skipped ${skippedCount} failed items`);
+        // Clear failed items from local state
+        // The stats will update via SSE
+      } catch (error) {
+        console.error('Failed to skip failed items:', error);
       }
     }
   };
@@ -240,6 +270,36 @@ const SyncStatusBanner: React.FC = () => {
             </Tooltip>
           )}
 
+          {/* Resume button (when paused) */}
+          {isActive && isPaused && (
+            <Tooltip label="Resume sync after fixing issues">
+              <Button
+                size="sm"
+                variant="solid"
+                colorScheme="green"
+                leftIcon={<FaPlay />}
+                onClick={handleResume}
+              >
+                Resume
+              </Button>
+            </Tooltip>
+          )}
+
+          {/* Skip failed button (when there are failed items) */}
+          {isActive && stats && stats.failed > 0 && (
+            <Tooltip label="Skip failed items and continue with remaining">
+              <Button
+                size="sm"
+                variant="outline"
+                colorScheme="orange"
+                leftIcon={<FaForward />}
+                onClick={handleSkipFailed}
+              >
+                Skip Failed
+              </Button>
+            </Tooltip>
+          )}
+
           {/* Cancel button (only for active sync) */}
           {isActive && (
             <Button
@@ -249,7 +309,7 @@ const SyncStatusBanner: React.FC = () => {
               leftIcon={<FaTimes />}
               onClick={handleCancel}
             >
-              Cancel
+              Abort
             </Button>
           )}
 

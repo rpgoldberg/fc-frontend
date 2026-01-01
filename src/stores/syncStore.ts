@@ -29,6 +29,9 @@ interface SyncState {
   message: string | null;
   error: Error | null;
 
+  // Session state
+  isPaused: boolean;
+
   // Failed items tracking
   failedItems: Array<{ mfcId: string; error?: string }>;
 
@@ -38,6 +41,7 @@ interface SyncState {
   updateProgress: (phase: SyncPhase, stats: SyncJobStats, message?: string) => void;
   addFailedItem: (mfcId: string, error?: string) => void;
   setError: (error: Error | null) => void;
+  setIsPaused: (isPaused: boolean) => void;
   completeSync: (phase: SyncPhase, stats: SyncJobStats, message?: string) => void;
   cancelSync: () => void;
   reset: () => void;
@@ -61,6 +65,7 @@ export const useSyncStore = create<SyncState>((set) => ({
   stats: null,
   message: null,
   error: null,
+  isPaused: false,
   failedItems: [],
 
   // Start a new sync session
@@ -73,6 +78,7 @@ export const useSyncStore = create<SyncState>((set) => ({
       stats: DEFAULT_STATS,
       message: 'Starting sync...',
       error: null,
+      isPaused: false,
       failedItems: [],
     }),
 
@@ -97,6 +103,10 @@ export const useSyncStore = create<SyncState>((set) => ({
   // Set error state
   setError: (error: Error | null) =>
     set({ error }),
+
+  // Set paused state (from session manager)
+  setIsPaused: (isPaused: boolean) =>
+    set({ isPaused }),
 
   // Mark sync as complete
   completeSync: (phase: SyncPhase, stats: SyncJobStats, message?: string) =>
@@ -127,6 +137,7 @@ export const useSyncStore = create<SyncState>((set) => ({
       stats: null,
       message: null,
       error: null,
+      isPaused: false,
       failedItems: [],
     }),
 }));

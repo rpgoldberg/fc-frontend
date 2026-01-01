@@ -314,6 +314,70 @@ export const cancelSyncJob = async (sessionId: string): Promise<void> => {
 };
 
 // ============================================================================
+// Session Control Functions
+// ============================================================================
+
+/**
+ * Session status from the scraper.
+ */
+export interface SessionStatus {
+  sessionId: string;
+  isPaused: boolean;
+  inCooldown: boolean;
+  cooldownRemainingMs?: number;
+  consecutiveFailures: number;
+  failedMfcIds: string[];
+}
+
+/**
+ * Get all active sync sessions with their status.
+ */
+export const getSyncSessions = async (): Promise<{
+  sessions: SessionStatus[];
+  count: number;
+  pausedCount: number;
+  inCooldownCount: number;
+}> => {
+  logger.verbose('Getting sync sessions');
+
+  const response = await scraperApi.get('/sync/sessions');
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to get sync sessions');
+  }
+
+  return response.data.data;
+};
+
+/**
+ * Resume a paused sync session.
+ */
+export const resumeSyncSession = async (sessionId: string): Promise<void> => {
+  logger.info('Resuming sync session:', sessionId);
+
+  const response = await scraperApi.post(`/sync/sessions/${sessionId}/resume`);
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to resume session');
+  }
+};
+
+/**
+ * Cancel failed items for a sync session.
+ */
+export const cancelFailedItems = async (sessionId: string): Promise<number> => {
+  logger.info('Cancelling failed items for session:', sessionId);
+
+  const response = await scraperApi.post(`/sync/sessions/${sessionId}/cancel-failed`);
+
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to cancel failed items');
+  }
+
+  return response.data.data.cancelledCount;
+};
+
+// ============================================================================
 // Export for convenience
 // ============================================================================
 
