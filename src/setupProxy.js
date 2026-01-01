@@ -5,13 +5,17 @@ module.exports = function(app) {
 
   // Special proxy for SSE streams - must come before general /api proxy
   // SSE requires streaming without buffering
+  // NOTE: When Express matches '/api/sync/stream', it strips that prefix from req.url
+  // So we need pathRewrite to ADD BACK /sync/stream, not strip /api
   app.use(
     '/api/sync/stream',
     createProxyMiddleware({
       target: 'http://localhost:5000',
       changeOrigin: true,
-      pathRewrite: {
-        '^/api': '', // Remove /api prefix -> /sync/stream/:sessionId
+      pathRewrite: (path) => {
+        // Express already stripped '/api/sync/stream', so path is just '/:sessionId'
+        // We need to add '/sync/stream' back to get '/sync/stream/:sessionId'
+        return '/sync/stream' + path;
       },
       // SSE-specific settings to prevent buffering
       onProxyRes: (proxyRes) => {
