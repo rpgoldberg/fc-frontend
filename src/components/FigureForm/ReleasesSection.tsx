@@ -22,6 +22,7 @@ import {
   Badge,
   Grid,
   GridItem,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import { FaPlus, FaTrash } from 'react-icons/fa';
@@ -31,6 +32,9 @@ const CURRENCY_OPTIONS = ['JPY', 'USD', 'EUR', 'GBP', 'CAD', 'AUD'];
 
 const ReleasesSection: React.FC = () => {
   const { control, register } = useFormContext<FigureFormData>();
+
+  // Color mode support
+  const rowBgColor = useColorModeValue('gray.50', 'gray.700');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -77,7 +81,7 @@ const ReleasesSection: React.FC = () => {
               p={4}
               borderWidth="1px"
               borderRadius="md"
-              bg="gray.50"
+              bg={rowBgColor}
               position="relative"
             >
               {/* Rerelease Badge */}

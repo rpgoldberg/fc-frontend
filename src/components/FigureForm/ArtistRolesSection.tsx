@@ -18,6 +18,7 @@ import {
   Text,
   VStack,
   Badge,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { FaPlus, FaTrash } from 'react-icons/fa';
@@ -27,6 +28,9 @@ import { FigureFormData, IArtistRoleFormData } from '../../types';
 const ArtistRolesSection: React.FC = () => {
   const { control, register } = useFormContext<FigureFormData>();
   const { roleTypes } = useLookupData();
+
+  // Color mode support
+  const rowBgColor = useColorModeValue('gray.50', 'gray.700');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -71,7 +75,7 @@ const ArtistRolesSection: React.FC = () => {
       ) : (
         <VStack spacing={3} align="stretch">
           {fields.map((field, index) => (
-            <HStack key={field.id} spacing={3} p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+            <HStack key={field.id} spacing={3} p={3} borderWidth="1px" borderRadius="md" bg={rowBgColor}>
               {/* Artist Name Input */}
               <FormControl flex="2">
                 <Input

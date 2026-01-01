@@ -29,8 +29,30 @@ import CatalogPurchaseSection from './CatalogPurchaseSection';
 import CompanyRolesSection from './CompanyRolesSection';
 import ArtistRolesSection from './ArtistRolesSection';
 import ReleasesSection from './ReleasesSection';
-import { Figure, FigureFormData, CollectionStatus } from '../../types';
+import { Figure, FigureFormData, CollectionStatus, ICompanyRoleFormData, IArtistRoleFormData, IReleaseFormData } from '../../types';
 import { retrieveMfcCookies } from '../../utils/crypto';
+import { useLookupData } from '../../hooks/useLookupData';
+
+// Scraped data types from backend
+interface IScrapedCompanyEntry {
+  name: string;
+  role: string;
+  mfcId?: number;
+}
+
+interface IScrapedArtistEntry {
+  name: string;
+  role: string;
+  mfcId?: number;
+}
+
+interface IScrapedRelease {
+  date?: string;
+  price?: number;
+  currency?: string;
+  isRerelease?: boolean;
+  jan?: string;
+}
 
 
 type SubmitAction = 'save' | 'saveAndAdd' | null;
@@ -54,6 +76,58 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
   const previewBorderColor = useColorModeValue('gray.200', 'gray.600');
   const previewBg = useColorModeValue('gray.50', 'gray.700');
   const placeholderColor = useColorModeValue('gray.400', 'gray.500');
+
+  // Get role types for mapping scraped data to form fields
+  const { roleTypes } = useLookupData();
+
+  // Helper to map scraped companies to form company roles
+  const mapScrapedCompaniesToFormData = useCallback((
+    companies: IScrapedCompanyEntry[]
+  ): ICompanyRoleFormData[] => {
+    return companies.map(company => {
+      // Find matching role type by name
+      const roleType = roleTypes.find(
+        rt => rt.kind === 'company' && rt.name.toLowerCase() === company.role.toLowerCase()
+      );
+      return {
+        companyId: undefined, // New company - no existing ID
+        companyName: company.name,
+        roleId: roleType?._id || '',
+        roleName: roleType?.name || company.role,
+      };
+    });
+  }, [roleTypes]);
+
+  // Helper to map scraped artists to form artist roles
+  const mapScrapedArtistsToFormData = useCallback((
+    artists: IScrapedArtistEntry[]
+  ): IArtistRoleFormData[] => {
+    return artists.map(artist => {
+      // Find matching role type by name
+      const roleType = roleTypes.find(
+        rt => rt.kind === 'artist' && rt.name.toLowerCase() === artist.role.toLowerCase()
+      );
+      return {
+        artistId: undefined, // New artist - no existing ID
+        artistName: artist.name,
+        roleId: roleType?._id || '',
+        roleName: roleType?.name || artist.role,
+      };
+    });
+  }, [roleTypes]);
+
+  // Helper to map scraped releases to form releases
+  const mapScrapedReleasesToFormData = useCallback((
+    releases: IScrapedRelease[]
+  ): IReleaseFormData[] => {
+    return releases.map(release => ({
+      date: release.date ? new Date(release.date).toISOString().slice(0, 7) : '', // YYYY-MM format
+      price: release.price,
+      currency: release.currency || 'JPY',
+      jan: release.jan || '',
+      isRerelease: release.isRerelease || false,
+    }));
+  }, []);
 
   const methods = useForm<FigureFormData>({
     defaultValues: initialData ? {
@@ -372,6 +446,39 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
             fieldsPopulated++;
           }
 
+          // Schema v3: Populate company roles from scraped data
+          if (result.data.companies && result.data.companies.length > 0) {
+            const existingCompanyRoles = currentValues.companyRoles || [];
+            if (existingCompanyRoles.length === 0) {
+              const mappedCompanies = mapScrapedCompaniesToFormData(result.data.companies);
+              setValue('companyRoles', mappedCompanies, { shouldValidate: true, shouldDirty: true });
+              fieldsPopulated += mappedCompanies.length;
+              console.log('[FRONTEND] Populated company roles:', mappedCompanies);
+            }
+          }
+
+          // Schema v3: Populate artist roles from scraped data
+          if (result.data.artists && result.data.artists.length > 0) {
+            const existingArtistRoles = currentValues.artistRoles || [];
+            if (existingArtistRoles.length === 0) {
+              const mappedArtists = mapScrapedArtistsToFormData(result.data.artists);
+              setValue('artistRoles', mappedArtists, { shouldValidate: true, shouldDirty: true });
+              fieldsPopulated += mappedArtists.length;
+              console.log('[FRONTEND] Populated artist roles:', mappedArtists);
+            }
+          }
+
+          // Schema v3: Populate releases from scraped data
+          if (result.data.releases && result.data.releases.length > 0) {
+            const existingReleases = currentValues.releases || [];
+            if (existingReleases.length === 0) {
+              const mappedReleases = mapScrapedReleasesToFormData(result.data.releases);
+              setValue('releases', mappedReleases, { shouldValidate: true, shouldDirty: true });
+              fieldsPopulated += mappedReleases.length;
+              console.log('[FRONTEND] Populated releases:', mappedReleases);
+            }
+          }
+
           if (mountedRef.current) {
             toast({
               title: fieldsPopulated > 0 ? 'Success' : 'Info',
@@ -416,7 +523,7 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
 
     lastScrapePromise.current = scrapePromise;
     return scrapePromise;
-  }, [getValues, setValue, toast]);
+  }, [getValues, setValue, toast, mapScrapedCompaniesToFormData, mapScrapedArtistsToFormData, mapScrapedReleasesToFormData]);
 
   // Optimized useEffect for MFC link changes with stable dependencies
   useEffect(() => {
