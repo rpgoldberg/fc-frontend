@@ -42,7 +42,7 @@ const CatalogPurchaseSection: React.FC<CatalogPurchaseSectionProps> = ({
   return (
     <>
       {/* ═══════════════════════════════════════════════════════════════════════════
-          Schema v3.0 Fields - Catalog Details (Collapsible)
+          Schema v3.0 Fields - Physical Dimensions (Collapsible)
           ═══════════════════════════════════════════════════════════════════════════ */}
       <Box borderWidth="1px" borderRadius="lg" p={4} mt={4}>
         <Button
@@ -53,42 +53,10 @@ const CatalogPurchaseSection: React.FC<CatalogPurchaseSectionProps> = ({
           width="full"
           justifyContent="space-between"
         >
-          <Text fontWeight="semibold">Catalog Details (Release & Dimensions)</Text>
+          <Text fontWeight="semibold">Physical Dimensions</Text>
         </Button>
         <Collapse in={showCatalogDetails} animateOpacity>
           <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(3, 1fr)' }} gap={6} mt={4}>
-            <GridItem>
-              <FormControl>
-                <FormLabel>Release Date</FormLabel>
-                <Input
-                  type="date"
-                  {...register('releaseDate')}
-                />
-              </FormControl>
-            </GridItem>
-
-            <GridItem>
-              <FormControl>
-                <FormLabel>Release Price</FormLabel>
-                <NumberInput min={0} onChange={(_, val) => setValue('releasePrice', isNaN(val) ? undefined : val)} value={watch('releasePrice') ?? ''}>
-                  <NumberInputField placeholder="e.g., 12800" />
-                </NumberInput>
-              </FormControl>
-            </GridItem>
-
-            <GridItem>
-              <FormControl>
-                <FormLabel>Release Currency</FormLabel>
-                <Select {...register('releaseCurrency')}>
-                  <option value="JPY">JPY (¥)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="CNY">CNY (¥)</option>
-                </Select>
-              </FormControl>
-            </GridItem>
-
             <GridItem>
               <FormControl>
                 <FormLabel>Height (mm)</FormLabel>

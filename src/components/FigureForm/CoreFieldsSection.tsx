@@ -65,7 +65,7 @@ const CoreFieldsSection: React.FC<CoreFieldsSectionProps> = ({
 
       <GridItem>
         <FormControl isInvalid={!!errors.scale}>
-          <FormLabel>
+          <FormLabel fontWeight="bold" color="purple.600">
             Scale
             <Tooltip label="Common scales: 1/8, 1/7, 1/6 for scale figures, or enter 'Nendoroid', 'Figma', etc.">
               <IconButton
@@ -78,9 +78,13 @@ const CoreFieldsSection: React.FC<CoreFieldsSectionProps> = ({
             </Tooltip>
           </FormLabel>
           <Input
-            {...register('scale')} //optional
+            {...register('scale')}
             placeholder="e.g., 1/8, 1/7, Nendoroid"
             onBlur={handleScaleBlur}
+            fontWeight="semibold"
+            borderColor="purple.300"
+            borderWidth="2px"
+            _focus={{ borderColor: 'purple.500', boxShadow: '0 0 0 1px var(--chakra-colors-purple-500)' }}
           />
           <FormErrorMessage>{errors.scale?.message}</FormErrorMessage>
         </FormControl>

@@ -90,7 +90,12 @@ const CompanyRolesSection: React.FC = () => {
                 <Select
                   {...register(`companyRoles.${index}.roleId` as const)}
                   aria-label="Role"
-                  defaultValue={field.roleId}
+                  defaultValue={
+                    // Use roleId if set, otherwise find by roleName (handles race condition)
+                    field.roleId ||
+                    companyRoleTypes.find(rt => rt.name.toLowerCase() === field.roleName?.toLowerCase())?._id ||
+                    ''
+                  }
                   onChange={(e) => {
                     const selectedRole = companyRoleTypes.find((rt) => rt._id === e.target.value);
                     if (selectedRole) {

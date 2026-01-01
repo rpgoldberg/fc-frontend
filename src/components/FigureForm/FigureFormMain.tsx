@@ -24,6 +24,7 @@ import {
 import { useForm, FormProvider } from 'react-hook-form';
 import { FaLink } from 'react-icons/fa';
 import CoreFieldsSection from './CoreFieldsSection';
+import MfcFieldsSection from './MfcFieldsSection';
 import CollectionDetailsSection from './CollectionDetailsSection';
 import CatalogPurchaseSection from './CatalogPurchaseSection';
 import CompanyRolesSection from './CompanyRolesSection';
@@ -432,6 +433,36 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
             fieldsPopulated++;
           }
 
+          // Schema v3: Populate MFC-specific fields
+          if (!currentValues.mfcTitle && result.data.mfcTitle) {
+            setValue('mfcTitle', result.data.mfcTitle, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+          if (!currentValues.origin && result.data.origin) {
+            setValue('origin', result.data.origin, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+          if (!currentValues.version && result.data.version) {
+            setValue('version', result.data.version, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+          if (!currentValues.category && result.data.category) {
+            setValue('category', result.data.category, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+          if (!currentValues.classification && result.data.classification) {
+            setValue('classification', result.data.classification, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+          if (!currentValues.materials && result.data.materials) {
+            setValue('materials', result.data.materials, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+          if ((!currentValues.tags || currentValues.tags.length === 0) && result.data.tags && result.data.tags.length > 0) {
+            setValue('tags', result.data.tags, { shouldValidate: true, shouldDirty: true });
+            fieldsPopulated++;
+          }
+
           // Schema v3: Populate company roles from scraped data
           if (result.data.companies && result.data.companies.length > 0) {
             const existingCompanyRoles = currentValues.companyRoles || [];
@@ -812,6 +843,11 @@ const FigureForm: React.FC<FigureFormProps> = ({ initialData, onSubmit, isLoadin
             </Box>
             <Box mt={4}>
               <ArtistRolesSection />
+            </Box>
+
+            {/* Schema v3: MFC-specific fields */}
+            <Box mt={6} pt={4} borderTopWidth="1px" borderColor="gray.200">
+              <MfcFieldsSection register={register} watch={watch} />
             </Box>
 
             {/* Collection Details Section - Extracted Component */}

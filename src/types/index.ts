@@ -89,6 +89,15 @@ export interface Figure {
   mfcId?: number;
   jan?: string; // JAN/UPC/EAN barcode
 
+  // Schema v3.0 - MFC-specific fields
+  mfcTitle?: string;        // The figure's specific title from MFC
+  origin?: string;          // Series/franchise (e.g., "Original", "Fate/Grand Order")
+  version?: string;         // Variant info (e.g., "Little Devil Ver.")
+  category?: string;        // Figure category (e.g., "Scale Figure")
+  classification?: string;  // Classification (e.g., "Goods")
+  materials?: string;       // Materials (e.g., "PVC, ABS")
+  tags?: string[];          // Various tags (e.g., "18+", "Castoff", "Limited")
+
   // Schema v3.0 - Releases (array for rereleases)
   releases?: IRelease[];
 
@@ -134,6 +143,15 @@ export interface FigureFormData {
   // Schema v3.0 - Product identification
   mfcId?: number;
   jan?: string; // JAN/UPC/EAN barcode
+
+  // Schema v3.0 - MFC-specific fields
+  mfcTitle?: string;        // The figure's specific title from MFC
+  origin?: string;          // Series/franchise (e.g., "Original", "Fate/Grand Order")
+  version?: string;         // Variant info (e.g., "Little Devil Ver.")
+  category?: string;        // Figure category (e.g., "Scale Figure")
+  classification?: string;  // Classification (e.g., "Goods")
+  materials?: string;       // Materials (e.g., "PVC, ABS")
+  tags?: string[];          // Various tags (e.g., "18+", "Castoff", "Limited")
 
   // Schema v3.0 - Primary release (simplified for form)
   releaseDate?: string;
