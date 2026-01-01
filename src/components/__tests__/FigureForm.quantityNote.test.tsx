@@ -134,8 +134,7 @@ describe('FigureForm - Quantity Field (Schema v3.0)', () => {
     it('should include quantity in form submission', async () => {
       renderFigureForm();
 
-      // Fill required fields
-      await userEvent.type(screen.getByLabelText(/manufacturer/i), 'Good Smile');
+      // Fill required field (name is required when no mfcLink)
       await userEvent.type(screen.getByLabelText(/figure name/i), 'Test Figure');
 
       // Set quantity to 2 - use fireEvent.change for direct value setting
@@ -213,9 +212,9 @@ describe('FigureForm - Note Field (Schema v3.0)', () => {
       const noteInput = screen.getByRole('textbox', { name: /^note$/i });
       await userEvent.type(noteInput, 'My note content');
 
-      // Interact with another field
-      const manufacturerInput = screen.getByLabelText(/manufacturer/i);
-      await userEvent.type(manufacturerInput, 'Test');
+      // Interact with another field (using name field since manufacturer was removed)
+      const nameInput = screen.getByLabelText(/figure name/i);
+      await userEvent.type(nameInput, 'Test Figure');
 
       // Note should still have its content
       expect(noteInput).toHaveValue('My note content');
@@ -226,8 +225,7 @@ describe('FigureForm - Note Field (Schema v3.0)', () => {
     it('should include note in form submission', async () => {
       renderFigureForm();
 
-      // Fill required fields
-      await userEvent.type(screen.getByLabelText(/manufacturer/i), 'Good Smile');
+      // Fill required field (name is required when no mfcLink)
       await userEvent.type(screen.getByLabelText(/figure name/i), 'Test Figure');
 
       // Add a note
@@ -249,8 +247,7 @@ describe('FigureForm - Note Field (Schema v3.0)', () => {
     it('should allow empty note on submission', async () => {
       renderFigureForm();
 
-      // Fill required fields only
-      await userEvent.type(screen.getByLabelText(/manufacturer/i), 'Good Smile');
+      // Fill required field only (name is required when no mfcLink)
       await userEvent.type(screen.getByLabelText(/figure name/i), 'Test Figure');
 
       // Submit form without note
@@ -285,8 +282,7 @@ describe('FigureForm - Quantity and Note Integration', () => {
   it('should submit both quantity and note together', async () => {
     renderFigureForm();
 
-    // Fill required fields
-    await userEvent.type(screen.getByLabelText(/manufacturer/i), 'Alter');
+    // Fill required field (name is required when no mfcLink)
     await userEvent.type(screen.getByLabelText(/figure name/i), 'Limited Edition Figure');
 
     // Set quantity - use fireEvent.change for direct value setting

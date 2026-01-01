@@ -352,7 +352,6 @@ describe('FigureForm Targeted Coverage', () => {
     it('should set initial data when provided', () => {
       const initialData = {
         _id: '123',
-        manufacturer: 'Good Smile',
         name: 'Test Figure',
         scale: '1/8',
         mfcLink: 'https://myfigurecollection.net/item/123',
@@ -363,8 +362,7 @@ describe('FigureForm Targeted Coverage', () => {
 
       renderFigureForm({ initialData });
 
-      // Check that form is populated
-      expect(screen.getByDisplayValue('Good Smile')).toBeInTheDocument();
+      // Check that form is populated (manufacturer field was removed from form)
       expect(screen.getByDisplayValue('Test Figure')).toBeInTheDocument();
       expect(screen.getByDisplayValue('1/8')).toBeInTheDocument();
       expect(screen.getByDisplayValue('https://myfigurecollection.net/item/123')).toBeInTheDocument();
@@ -375,14 +373,12 @@ describe('FigureForm Targeted Coverage', () => {
 
     it('should handle partial initial data', () => {
       const initialData = {
-        manufacturer: 'Partial Co',
         name: 'Partial Figure',
         // Other fields missing
       };
 
       renderFigureForm({ initialData });
 
-      expect(screen.getByDisplayValue('Partial Co')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Partial Figure')).toBeInTheDocument();
 
       // Other fields should be empty
@@ -393,12 +389,12 @@ describe('FigureForm Targeted Coverage', () => {
     it('should handle undefined initial data', () => {
       renderFigureForm({ initialData: undefined });
 
-      // All fields should be empty
-      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i) as HTMLInputElement;
+      // All fields should be empty (manufacturer field was removed from form)
       const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i) as HTMLInputElement;
+      const scaleInput = screen.getByPlaceholderText(/1\/8, 1\/7/i) as HTMLInputElement;
 
-      expect(manufacturerInput.value).toBe('');
       expect(nameInput.value).toBe('');
+      expect(scaleInput.value).toBe('');
     });
   });
 
@@ -448,13 +444,11 @@ describe('FigureForm Targeted Coverage', () => {
         expect(screen.getByRole('form')).toBeInTheDocument();
       });
 
-      // Test 3: Name and manufacturer filled
+      // Test 3: Name filled (manufacturer field removed from form)
       await userEvent.clear(mfcInput);
       const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
-      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
 
       await userEvent.type(nameInput, 'Test Figure');
-      await userEvent.type(manufacturerInput, 'Test Co');
 
       fireEvent.submit(form);
 
@@ -487,8 +481,7 @@ describe('FigureForm Targeted Coverage', () => {
       const onSubmit = jest.fn();
       renderFigureForm({ onSubmit });
 
-      // Fill all fields
-      await userEvent.type(screen.getByPlaceholderText(/Good Smile Company/i), 'Manufacturer');
+      // Fill all fields (manufacturer field was removed from form)
       await userEvent.type(screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i), 'Name');
       await userEvent.type(screen.getByPlaceholderText(/1\/8, 1\/7/i), '1/8');
       await userEvent.type(screen.getByPlaceholderText(/Shelf, Display Case/i), 'Location');
@@ -503,7 +496,6 @@ describe('FigureForm Targeted Coverage', () => {
         // onSubmit is now called with (data, addAnother)
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
-            manufacturer: 'Manufacturer',
             name: 'Name',
             scale: '1/8',
             location: 'Location',

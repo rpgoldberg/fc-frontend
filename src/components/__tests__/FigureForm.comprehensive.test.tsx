@@ -112,8 +112,8 @@ describe('FigureForm Comprehensive Tests', () => {
       expect(screen.getByRole('form')).toBeInTheDocument();
 
       // Check for input fields by placeholder text to avoid ambiguity
+      // Note: manufacturer field was removed from form in Schema v3 (replaced by companyRoles)
       expect(screen.getByPlaceholderText(/item #.*MFC URL/i)).toBeInTheDocument();
-      expect(screen.getByPlaceholderText(/Good Smile Company/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/1\/8, 1\/7/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Shelf, Display Case/i)).toBeInTheDocument();
@@ -456,7 +456,7 @@ describe('FigureForm Comprehensive Tests', () => {
 
       expect(screen.getByRole('form')).toHaveAttribute('aria-labelledby');
       expect(screen.getByLabelText(/MFC Item/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Manufacturer/i)).toBeInTheDocument();
+      // Note: manufacturer field was removed from form in Schema v3 (replaced by companyRoles)
       expect(screen.getByLabelText(/Figure Name/i)).toBeInTheDocument();
     });
 
@@ -464,7 +464,7 @@ describe('FigureForm Comprehensive Tests', () => {
       mockWatch.mockReturnValue(''); // No MFC link
       render(<FigureForm onSubmit={mockOnSubmit} isLoading={false} />);
 
-      // When no MFC link, manufacturer and name should be required
+      // When no MFC link, name should be required
       const requiredIndicators = screen.getAllByText('*');
       expect(requiredIndicators.length).toBeGreaterThan(0);
     });

@@ -359,11 +359,9 @@ describe('FigureForm Real Coverage Tests', () => {
       const onSubmit = jest.fn();
       renderFigureForm({ onSubmit });
 
-      // Fill required fields
-      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
+      // Fill required field (manufacturer field was removed from form in Schema v3)
       const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
 
-      await userEvent.type(manufacturerInput, 'Test Manufacturer');
       await userEvent.type(nameInput, 'Test Figure');
 
       // Submit form
@@ -374,7 +372,6 @@ describe('FigureForm Real Coverage Tests', () => {
         // onSubmit is now called with (data, addAnother)
         expect(onSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
-            manufacturer: 'Test Manufacturer',
             name: 'Test Figure',
           }),
           expect.any(Boolean) // addAnother flag

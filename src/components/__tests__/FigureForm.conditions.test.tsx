@@ -205,33 +205,24 @@ describe('FigureForm Uncovered Conditions', () => {
       const form = screen.getByRole('form');
       const mfcInput = screen.getByPlaceholderText(/item #.*MFC URL/i);
       const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i);
-      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i);
 
-      // Condition 1: No MFC link, no name, no manufacturer
+      // Condition 1: No MFC link, no name - validation should fail
       fireEvent.submit(form);
       await waitFor(() => {
         expect(onSubmit).not.toHaveBeenCalled();
       });
 
-      // Condition 2: MFC link present, name and manufacturer not required
+      // Condition 2: MFC link present, name not required
       await userEvent.type(mfcInput, 'https://myfigurecollection.net/item/123');
       fireEvent.submit(form);
       // May submit or trigger scraping
 
-      // Condition 3: No MFC link, name present, no manufacturer
+      // Condition 3: No MFC link, name present - should submit
       await userEvent.clear(mfcInput);
       await userEvent.type(nameInput, 'Test Figure');
       fireEvent.submit(form);
       await waitFor(() => {
-        expect(onSubmit).not.toHaveBeenCalled();
-      });
-
-      // Condition 4: No MFC link, manufacturer present, no name
-      await userEvent.clear(nameInput);
-      await userEvent.type(manufacturerInput, 'Test Manufacturer');
-      fireEvent.submit(form);
-      await waitFor(() => {
-        expect(onSubmit).not.toHaveBeenCalled();
+        expect(onSubmit).toHaveBeenCalled();
       });
     });
   });
@@ -426,14 +417,13 @@ describe('FigureForm Uncovered Conditions', () => {
     it('should test with initialData provided', () => {
       const initialData = {
         _id: '123',
-        manufacturer: 'Test Mfr',
         name: 'Test Name',
         scale: '1/7',
       };
 
       renderFigureForm({ initialData });
 
-      expect(screen.getByDisplayValue('Test Mfr')).toBeInTheDocument();
+      // manufacturer field was removed from form
       expect(screen.getByDisplayValue('Test Name')).toBeInTheDocument();
       expect(screen.getByDisplayValue('1/7')).toBeInTheDocument();
     });
@@ -441,11 +431,12 @@ describe('FigureForm Uncovered Conditions', () => {
     it('should test without initialData', () => {
       renderFigureForm({ initialData: undefined });
 
-      const manufacturerInput = screen.getByPlaceholderText(/Good Smile Company/i) as HTMLInputElement;
+      // manufacturer field was removed from form
       const nameInput = screen.getByPlaceholderText(/Nendoroid Miku Hatsune/i) as HTMLInputElement;
+      const scaleInput = screen.getByPlaceholderText(/1\/8, 1\/7/i) as HTMLInputElement;
 
-      expect(manufacturerInput.value).toBe('');
       expect(nameInput.value).toBe('');
+      expect(scaleInput.value).toBe('');
     });
   });
 
