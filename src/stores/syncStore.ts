@@ -15,10 +15,30 @@ import {
 
 export type SseConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
 
+// Data structure for recovered session (from backend active-job endpoint)
+export interface RecoveredJobData {
+  sessionId: string;
+  phase: string;
+  message: string;
+  stats: {
+    total: number;
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+    skipped: number;
+  };
+  startedAt: string;
+}
+
 interface SyncState {
   // Session info
   sessionId: string | null;
   isActive: boolean;
+
+  // Recovery state
+  hasOrphanedSession: boolean;
+  orphanedSessionData: RecoveredJobData | null;
 
   // SSE connection
   connectionState: SseConnectionState;
@@ -37,6 +57,9 @@ interface SyncState {
 
   // Actions
   startSync: (sessionId: string) => void;
+  setOrphanedSession: (data: RecoveredJobData | null) => void;
+  recoverSession: (data: RecoveredJobData) => void;
+  dismissOrphanedSession: () => void;
   updateConnectionState: (state: SseConnectionState) => void;
   updateProgress: (phase: SyncPhase, stats: SyncJobStats, message?: string) => void;
   addFailedItem: (mfcId: string, error?: string) => void;
@@ -60,6 +83,8 @@ export const useSyncStore = create<SyncState>((set) => ({
   // Initial state
   sessionId: null,
   isActive: false,
+  hasOrphanedSession: false,
+  orphanedSessionData: null,
   connectionState: 'disconnected',
   phase: null,
   stats: null,
@@ -73,6 +98,8 @@ export const useSyncStore = create<SyncState>((set) => ({
     set({
       sessionId,
       isActive: true,
+      hasOrphanedSession: false,
+      orphanedSessionData: null,
       connectionState: 'connecting',
       phase: 'validating',
       stats: DEFAULT_STATS,
@@ -80,6 +107,36 @@ export const useSyncStore = create<SyncState>((set) => ({
       error: null,
       isPaused: false,
       failedItems: [],
+    }),
+
+  // Set orphaned session data (detected on page load)
+  setOrphanedSession: (data: RecoveredJobData | null) =>
+    set({
+      hasOrphanedSession: !!data,
+      orphanedSessionData: data,
+    }),
+
+  // Recover an orphaned session - start tracking it
+  recoverSession: (data: RecoveredJobData) =>
+    set({
+      sessionId: data.sessionId,
+      isActive: true,
+      hasOrphanedSession: false,
+      orphanedSessionData: null,
+      connectionState: 'connecting',
+      phase: data.phase as any,
+      stats: data.stats,
+      message: data.message || 'Reconnecting...',
+      error: null,
+      isPaused: false,
+      failedItems: [],
+    }),
+
+  // Dismiss orphaned session without recovering
+  dismissOrphanedSession: () =>
+    set({
+      hasOrphanedSession: false,
+      orphanedSessionData: null,
     }),
 
   // Update SSE connection state
@@ -132,6 +189,8 @@ export const useSyncStore = create<SyncState>((set) => ({
     set({
       sessionId: null,
       isActive: false,
+      hasOrphanedSession: false,
+      orphanedSessionData: null,
       connectionState: 'disconnected',
       phase: null,
       stats: null,

@@ -301,6 +301,51 @@ export const getSyncJob = async (
 };
 
 /**
+ * Active job response from the backend.
+ */
+export interface ActiveJobResponse {
+  success: boolean;
+  hasActiveJob: boolean;
+  job?: {
+    sessionId: string;
+    phase: string;
+    message: string;
+    stats: {
+      total: number;
+      pending: number;
+      processing: number;
+      completed: number;
+      failed: number;
+      skipped: number;
+    };
+    startedAt: string;
+    completedAt?: string;
+  };
+}
+
+/**
+ * Check if user has an active sync job (for session recovery).
+ * Returns the job details if one exists, null otherwise.
+ */
+export const getActiveJob = async (): Promise<ActiveJobResponse['job'] | null> => {
+  logger.verbose('Checking for active sync job...');
+
+  try {
+    const response = await scraperApi.get('/sync/active-job');
+
+    if (!response.data.success || !response.data.hasActiveJob) {
+      return null;
+    }
+
+    logger.info('Found active job:', response.data.job.sessionId);
+    return response.data.job;
+  } catch (error: any) {
+    logger.error('Failed to check for active job:', error.message);
+    return null;
+  }
+};
+
+/**
  * Cancel an active sync job.
  */
 export const cancelSyncJob = async (sessionId: string): Promise<void> => {

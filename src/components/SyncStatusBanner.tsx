@@ -32,10 +32,12 @@ import {
   FaTimesCircle,
   FaPlay,
   FaForward,
+  FaPlug,
 } from 'react-icons/fa';
 import { useSyncStore } from '../stores/syncStore';
 import { cancelSyncJob, resumeSyncSession, cancelFailedItems } from '../api/scraper';
 import { SyncPhase } from '../types';
+import { useSessionRecovery } from '../hooks/useSessionRecovery';
 
 /**
  * Get human-readable phase label.
@@ -97,10 +99,17 @@ const SyncStatusBanner: React.FC = () => {
     message,
     failedItems,
     isPaused,
+    hasOrphanedSession,
+    orphanedSessionData,
     cancelSync,
     reset,
     setIsPaused,
+    recoverSession,
+    dismissOrphanedSession,
   } = useSyncStore();
+
+  // Check for orphaned sessions on mount
+  useSessionRecovery();
 
   // Colors
   const bgColor = useColorModeValue('blue.50', 'blue.900');
@@ -109,6 +118,8 @@ const SyncStatusBanner: React.FC = () => {
   const completeBorderColor = useColorModeValue('green.200', 'green.700');
   const failedBgColor = useColorModeValue('red.50', 'red.900');
   const failedBorderColor = useColorModeValue('red.200', 'red.700');
+  const recoveryBgColor = useColorModeValue('orange.50', 'orange.900');
+  const recoveryBorderColor = useColorModeValue('orange.200', 'orange.700');
 
   // Calculate progress
   const progressPercent = useMemo(() => {
@@ -120,7 +131,27 @@ const SyncStatusBanner: React.FC = () => {
   const phaseStatus = getPhaseStatus(phase);
 
   // Determine if we should show the banner
-  const shouldShow = isActive || phase === 'completed' || phase === 'failed' || phase === 'cancelled';
+  const shouldShow = isActive || phase === 'completed' || phase === 'failed' || phase === 'cancelled' || hasOrphanedSession;
+
+  // Handle reconnect to orphaned session
+  const handleReconnect = () => {
+    if (orphanedSessionData) {
+      recoverSession(orphanedSessionData);
+    }
+  };
+
+  // Handle cancel orphaned session
+  const handleCancelOrphaned = async () => {
+    if (orphanedSessionData) {
+      try {
+        await cancelSyncJob(orphanedSessionData.sessionId);
+        dismissOrphanedSession();
+      } catch (error) {
+        console.error('Failed to cancel orphaned session:', error);
+        dismissOrphanedSession(); // Dismiss locally anyway
+      }
+    }
+  };
 
   // Handle cancel
   const handleCancel = async () => {
@@ -171,12 +202,88 @@ const SyncStatusBanner: React.FC = () => {
   // Determine colors based on state
   let currentBgColor = bgColor;
   let currentBorderColor = borderColor;
-  if (phase === 'completed') {
+  if (hasOrphanedSession && !isActive) {
+    currentBgColor = recoveryBgColor;
+    currentBorderColor = recoveryBorderColor;
+  } else if (phase === 'completed') {
     currentBgColor = completeBgColor;
     currentBorderColor = completeBorderColor;
   } else if (phase === 'failed' || phase === 'cancelled') {
     currentBgColor = failedBgColor;
     currentBorderColor = failedBorderColor;
+  }
+
+  // Render recovery banner if orphaned session detected
+  if (hasOrphanedSession && !isActive && orphanedSessionData) {
+    const orphanedStats = orphanedSessionData.stats;
+    const orphanedProgress = orphanedStats.total > 0
+      ? Math.round(((orphanedStats.completed + orphanedStats.failed + orphanedStats.skipped) / orphanedStats.total) * 100)
+      : 0;
+
+    return (
+      <Box
+        position="sticky"
+        top={0}
+        zIndex={100}
+        bg={currentBgColor}
+        borderBottom="1px"
+        borderColor={currentBorderColor}
+        px={4}
+        py={2}
+      >
+        <Flex align="center" justify="space-between">
+          <HStack spacing={3} flex={1}>
+            <Icon as={FaPlug} color="orange.500" boxSize={5} />
+            <VStack align="start" spacing={0} flex={1}>
+              <HStack>
+                <Text fontWeight="bold" fontSize="sm">
+                  Sync Session Found
+                </Text>
+                <Badge colorScheme="orange" fontSize="xs">
+                  {orphanedSessionData.phase}
+                </Badge>
+              </HStack>
+              <Text fontSize="xs" color="gray.600">
+                A sync session is running in the background ({orphanedProgress}% complete - {orphanedStats.completed}/{orphanedStats.total})
+              </Text>
+            </VStack>
+          </HStack>
+
+          <HStack spacing={2}>
+            <Tooltip label="Reconnect to this session to see live progress">
+              <Button
+                size="sm"
+                colorScheme="green"
+                leftIcon={<FaPlug />}
+                onClick={handleReconnect}
+              >
+                Reconnect
+              </Button>
+            </Tooltip>
+            <Tooltip label="Cancel this sync session">
+              <Button
+                size="sm"
+                variant="outline"
+                colorScheme="red"
+                leftIcon={<FaTimes />}
+                onClick={handleCancelOrphaned}
+              >
+                Cancel
+              </Button>
+            </Tooltip>
+            <Tooltip label="Dismiss this notification">
+              <IconButton
+                aria-label="Dismiss"
+                icon={<FaTimes />}
+                size="sm"
+                variant="ghost"
+                onClick={dismissOrphanedSession}
+              />
+            </Tooltip>
+          </HStack>
+        </Flex>
+      </Box>
+    );
   }
 
   return (
