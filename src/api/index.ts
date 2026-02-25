@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
-import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User, BulkImportPreviewResponse, BulkImportExecuteResponse } from '../types';
+import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User, BulkImportPreviewResponse, BulkImportExecuteResponse, MfcList, MfcListFormData, ListPrivacy } from '../types';
 import { createLogger } from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
@@ -315,4 +315,63 @@ export const previewBulkImport = async (csvContent: string): Promise<BulkImportP
 export const executeBulkImport = async (csvContent: string, skipDuplicates = true): Promise<BulkImportExecuteResponse> => {
   const response = await api.post('/figures/bulk-import', { csvContent, skipDuplicates });
   return response.data;
+};
+
+// Lists API
+export const getLists = async (params?: {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  privacy?: ListPrivacy;
+}): Promise<PaginatedResponse<MfcList>> => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.set('page', params.page.toString());
+  if (params?.limit) queryParams.set('limit', params.limit.toString());
+  if (params?.sortBy) queryParams.set('sortBy', params.sortBy);
+  if (params?.sortOrder) queryParams.set('sortOrder', params.sortOrder);
+  if (params?.privacy) queryParams.set('privacy', params.privacy);
+
+  const query = queryParams.toString();
+  const response = await api.get(`/lists${query ? `?${query}` : ''}`);
+  return response.data;
+};
+
+export const getListById = async (id: string): Promise<MfcList> => {
+  const response = await api.get(`/lists/${id}`);
+  return response.data.data;
+};
+
+export const createList = async (data: MfcListFormData): Promise<MfcList> => {
+  const response = await api.post('/lists', data);
+  return response.data.data;
+};
+
+export const updateList = async (id: string, data: Partial<MfcListFormData>): Promise<MfcList> => {
+  const response = await api.put(`/lists/${id}`, data);
+  return response.data.data;
+};
+
+export const deleteList = async (id: string): Promise<void> => {
+  await api.delete(`/lists/${id}`);
+};
+
+export const getListsByItem = async (mfcId: number): Promise<{ _id: string; name: string }[]> => {
+  const response = await api.get(`/lists/by-item/${mfcId}`);
+  return response.data.data;
+};
+
+export const addItemsToList = async (listId: string, mfcIds: number[]): Promise<MfcList> => {
+  const response = await api.post(`/lists/${listId}/items`, { mfcIds });
+  return response.data.data;
+};
+
+export const removeItemsFromList = async (listId: string, mfcIds: number[]): Promise<MfcList> => {
+  const response = await api.delete(`/lists/${listId}/items`, { data: { mfcIds } });
+  return response.data.data;
+};
+
+export const syncLists = async (lists: MfcListFormData[]): Promise<{ upserted: number }> => {
+  const response = await api.post('/lists/sync', { lists });
+  return response.data.data;
 };

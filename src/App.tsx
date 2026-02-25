@@ -14,6 +14,8 @@ import AddFigure from './pages/AddFigure';
 import EditFigure from './pages/EditFigure';
 import Search from './pages/Search';
 import Statistics from './pages/Statistics';
+import Lists from './pages/Lists';
+import ListDetail from './pages/ListDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -58,6 +60,8 @@ const App: React.FC = () => {
             <Route path="figures/edit/:id" element={<EditFigure />} />
             <Route path="search" element={<Search />} />
             <Route path="statistics" element={<Statistics />} />
+            <Route path="lists" element={<Lists />} />
+            <Route path="lists/:id" element={<ListDetail />} />
             <Route path="profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Route>

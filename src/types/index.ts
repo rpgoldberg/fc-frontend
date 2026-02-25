@@ -440,3 +440,48 @@ export interface SseSyncCompleteEvent {
   stats: SyncJobStats;
   message?: string;
 }
+
+// ============================================================================
+// MFC Lists
+// ============================================================================
+
+export type ListPrivacy = 'public' | 'friends' | 'private';
+
+export const MFC_LIST_LIMITS = {
+  NAME_MAX: 32,
+  TEASER_MAX: 64,
+} as const;
+
+export interface MfcList {
+  _id: string;
+  mfcId: number;
+  userId: string;
+  name: string;
+  teaser?: string;
+  description?: string;
+  privacy: ListPrivacy;
+  iconUrl?: string;
+  allowComments: boolean;
+  mailOnSales: boolean;
+  mailOnHunts: boolean;
+  itemCount: number;
+  itemMfcIds: number[];
+  mfcCreatedAt?: string;
+  mfcLastEditedAt?: string;
+  lastSyncedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MfcListFormData {
+  mfcId?: number;
+  name: string;
+  teaser?: string;
+  description?: string;
+  privacy?: ListPrivacy;
+  iconUrl?: string;
+  allowComments?: boolean;
+  mailOnSales?: boolean;
+  mailOnHunts?: boolean;
+  itemMfcIds?: number[];
+}
