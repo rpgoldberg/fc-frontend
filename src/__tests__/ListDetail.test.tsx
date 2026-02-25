@@ -158,6 +158,24 @@ describe('ListDetail Page', () => {
 
       expect(screen.getByText(/Make an offer!/)).toBeInTheDocument();
     });
+
+    it('sanitizes malicious HTML via DOMPurify', async () => {
+      const xssList: MfcList = {
+        ...mockList,
+        description: '<p>Safe text</p><script>alert("xss")</script><img src=x onerror="alert(1)">',
+      };
+      mockGetListById.mockResolvedValue(xssList);
+      renderListDetail();
+
+      await waitFor(() => {
+        expect(screen.getByText('Safe text')).toBeInTheDocument();
+      });
+
+      // Script tags and event handlers should be stripped by DOMPurify
+      const descriptionBox = screen.getByText('Safe text').closest('div');
+      expect(descriptionBox?.innerHTML).not.toContain('<script>');
+      expect(descriptionBox?.innerHTML).not.toContain('onerror');
+    });
   });
 
   describe('Metadata', () => {

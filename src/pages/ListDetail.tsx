@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from 'react-query';
 import { useParams, useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   Box,
   Heading,
@@ -124,12 +125,12 @@ const ListDetail: React.FC = () => {
 
       <Divider mb={4} />
 
-      {/* Description (HTML) */}
+      {/* Description (HTML, sanitized for XSS defense-in-depth) */}
       {list.description && (
         <Box mb={4}>
           <Heading size="sm" mb={2}>Description</Heading>
           <Box
-            dangerouslySetInnerHTML={{ __html: list.description }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(list.description) }}
             sx={{
               'p': { mb: 2 },
               'b, strong': { fontWeight: 'bold' },

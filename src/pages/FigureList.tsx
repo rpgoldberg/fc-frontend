@@ -124,10 +124,11 @@ const FigureList: React.FC = () => {
     }
   }, [syncStats, phase, isActive, queryClient]);
 
-  // Also refresh immediately when sync completes
+  // Also refresh immediately when sync completes (figures + lists)
   useEffect(() => {
     if (phase === 'completed') {
       queryClient.invalidateQueries(['figures']);
+      queryClient.invalidateQueries(['lists']);
     }
   }, [phase, queryClient]);
 
