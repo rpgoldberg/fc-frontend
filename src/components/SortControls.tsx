@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 
-export type SortField = 'createdAt' | 'name' | 'manufacturer' | 'scale' | 'price';
+export type SortField = 'createdAt' | 'updatedAt' | 'name' | 'manufacturer' | 'scale';
 export type SortDirection = 'asc' | 'desc';
 
 export interface SortParams {
@@ -26,10 +26,10 @@ interface SortControlsProps {
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'createdAt', label: 'Date Added' },
+  { value: 'updatedAt', label: 'Last Updated' },
   { value: 'name', label: 'Name' },
   { value: 'manufacturer', label: 'Manufacturer' },
   { value: 'scale', label: 'Scale' },
-  { value: 'price', label: 'Price' },
 ];
 
 const SortControls: React.FC<SortControlsProps> = ({

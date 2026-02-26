@@ -32,10 +32,10 @@ describe('SortControls', () => {
 
       // Check all options exist
       expect(screen.getByRole('option', { name: 'Date Added' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Last Updated' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Name' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Manufacturer' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Scale' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'Price' })).toBeInTheDocument();
     });
 
     it('should display correct selected sort field', () => {

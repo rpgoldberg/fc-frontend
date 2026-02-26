@@ -186,12 +186,17 @@ const FigureCard: React.FC<FigureCardProps> = ({ figure, searchQuery, layout = '
       >
         <HighlightedText text={figure.name} query={searchQuery} />
       </Text>
-      <Text fontSize="sm" color="gray.600" mb={compact ? 1 : 2} noOfLines={1}>
+      <Text fontSize="sm" color="gray.600" mb={1} noOfLines={1}>
         <HighlightedText
           text={getDisplayCompanyName(figure.companyRoles, figure.manufacturer)}
           query={searchQuery}
         />
       </Text>
+      {figure.version && (
+        <Text fontSize="xs" color="gray.500" mb={1} noOfLines={1} fontStyle="italic">
+          <HighlightedText text={figure.version} query={searchQuery} />
+        </Text>
+      )}
       <HStack spacing={2} mb={compact ? 1 : 2} flexWrap="wrap">
         <Badge colorScheme="brand" fontSize="xs">
           {figure.scale}

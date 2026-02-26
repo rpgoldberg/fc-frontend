@@ -149,7 +149,10 @@ const FigureList: React.FC = () => {
     facetedFilters.scales.length > 0 ||
     facetedFilters.locations.length > 0 ||
     facetedFilters.origins.length > 0 ||
-    facetedFilters.categories.length > 0;
+    facetedFilters.categories.length > 0 ||
+    facetedFilters.sculptors.length > 0 ||
+    facetedFilters.illustrators.length > 0 ||
+    facetedFilters.classifications.length > 0;
 
   const apiFilters = hasActiveFilters
     ? {
@@ -170,6 +173,15 @@ const FigureList: React.FC = () => {
         }),
         ...(facetedFilters.categories.length > 0 && {
           category: facetedFilters.categories.join(','),
+        }),
+        ...(facetedFilters.sculptors.length > 0 && {
+          sculptor: facetedFilters.sculptors.join(','),
+        }),
+        ...(facetedFilters.illustrators.length > 0 && {
+          illustrator: facetedFilters.illustrators.join(','),
+        }),
+        ...(facetedFilters.classifications.length > 0 && {
+          classification: facetedFilters.classifications.join(','),
         }),
       }
     : {};
@@ -325,6 +337,20 @@ const FigureList: React.FC = () => {
             />
           </Flex>
 
+          {/* Top controls: slider, page size, card layout (above grid) */}
+          {data && data.total > 0 && (
+            <Pagination
+              variant="top-controls"
+              currentPage={page}
+              totalPages={data?.pages || 1}
+              onPageChange={handlePageChange}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+              cardLayout={cardLayout}
+              onCardLayoutChange={handleCardLayoutChange}
+            />
+          )}
+
           {/* Figure grid or empty state */}
           {data?.total === 0 ? (
             hasActiveFilters ? (
@@ -343,14 +369,12 @@ const FigureList: React.FC = () => {
                 ))}
               </SimpleGrid>
 
+              {/* Bottom navigation: page number arrows only */}
               <Pagination
+                variant="page-nav"
                 currentPage={page}
                 totalPages={data?.pages || 1}
                 onPageChange={handlePageChange}
-                pageSize={pageSize}
-                onPageSizeChange={handlePageSizeChange}
-                cardLayout={cardLayout}
-                onCardLayoutChange={handleCardLayoutChange}
               />
             </>
           )}

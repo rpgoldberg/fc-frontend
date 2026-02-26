@@ -229,6 +229,9 @@ describe('useFigureListState', () => {
           locations: [],
           origins: ['Fate'],
           categories: [],
+          sculptors: [],
+          illustrators: [],
+          classifications: [],
         });
       });
 
@@ -312,6 +315,9 @@ describe('useFigureListState', () => {
       expect(EMPTY_FACETED_FILTERS.locations).toEqual([]);
       expect(EMPTY_FACETED_FILTERS.origins).toEqual([]);
       expect(EMPTY_FACETED_FILTERS.categories).toEqual([]);
+      expect(EMPTY_FACETED_FILTERS.sculptors).toEqual([]);
+      expect(EMPTY_FACETED_FILTERS.illustrators).toEqual([]);
+      expect(EMPTY_FACETED_FILTERS.classifications).toEqual([]);
     });
   });
 });

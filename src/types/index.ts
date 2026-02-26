@@ -259,6 +259,11 @@ export interface StatsData {
   v3ManufacturerStats?: { _id: string; count: number }[];
   // Schema v3.0 - Distributor stats from companyRoles array
   distributorStats?: { _id: string; count: number }[];
+  // Schema v3.0 - Artist role stats
+  sculptorStats?: { _id: string; count: number }[];
+  illustratorStats?: { _id: string; count: number }[];
+  // Schema v3.0 - Classification stats
+  classificationStats?: { _id: string; count: number }[];
   activeStatus: CollectionStatus | null;
 }
 

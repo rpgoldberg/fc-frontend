@@ -25,6 +25,9 @@ const emptyFilters: FacetedFilters = {
   locations: [],
   origins: [],
   categories: [],
+  sculptors: [],
+  illustrators: [],
+  classifications: [],
 };
 
 const mockStats = {

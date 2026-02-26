@@ -18,6 +18,9 @@
  * - loc: Location filters (comma-separated)
  * - origin: Origin filters (comma-separated)
  * - cat: Category filters (comma-separated)
+ * - scl: Sculptor filters (comma-separated)
+ * - ill: Illustrator filters (comma-separated)
+ * - cls: Classification filters (comma-separated)
  */
 
 import { useCallback, useMemo } from 'react';
@@ -34,12 +37,15 @@ const EMPTY_FACETED_FILTERS: FacetedFilters = {
   locations: [],
   origins: [],
   categories: [],
+  sculptors: [],
+  illustrators: [],
+  classifications: [],
 };
 
 // Valid values for type checking
 const VALID_STATUSES: CollectionStatus[] = ['owned', 'ordered', 'wished'];
 const VALID_LAYOUTS: CardLayout[] = ['text-bottom', 'text-left', 'image-only'];
-const VALID_SORT_FIELDS: SortField[] = ['createdAt', 'name', 'manufacturer', 'scale', 'price'];
+const VALID_SORT_FIELDS: SortField[] = ['createdAt', 'updatedAt', 'name', 'manufacturer', 'scale'];
 const VALID_SORT_ORDERS: SortDirection[] = ['asc', 'desc'];
 const VALID_PAGE_SIZES = PAGE_SIZE_PRESETS.map(p => p.value);
 
@@ -143,6 +149,9 @@ export function useFigureListState(): FigureListState & FigureListActions {
       locations: parseFilterList('loc'),
       origins: parseFilterList('origin'),
       categories: parseFilterList('cat'),
+      sculptors: parseFilterList('scl'),
+      illustrators: parseFilterList('ill'),
+      classifications: parseFilterList('cls'),
     };
 
     return {
@@ -229,6 +238,9 @@ export function useFigureListState(): FigureListState & FigureListActions {
       loc: serializeFilter(filters.locations),
       origin: serializeFilter(filters.origins),
       cat: serializeFilter(filters.categories),
+      scl: serializeFilter(filters.sculptors),
+      ill: serializeFilter(filters.illustrators),
+      cls: serializeFilter(filters.classifications),
       page: null, // Reset to page 1 when changing filters
     });
   }, [updateParams]);
@@ -241,6 +253,9 @@ export function useFigureListState(): FigureListState & FigureListActions {
       loc: null,
       origin: null,
       cat: null,
+      scl: null,
+      ill: null,
+      cls: null,
       page: null,
     });
   }, [updateParams]);
