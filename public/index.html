@@ -8,8 +8,9 @@
     <meta name="theme-color" content="#1a1b2e" />
     <meta
       name="description"
-      content="Your personal figure collection catalog. Sync with MyFigureCollection, track owned, ordered, and wished figures, search in milliseconds, and organize with flexible layouts. Built by collectors, for collectors."
+      content="Track and organize your anime figure collection. Sync with MyFigureCollection, manage owned, ordered, and wished figures with flexible layouts."
     />
+    <meta name="keywords" content="anime figures, figure collection, statue collection, anime statues, MyFigureCollection, figure tracker, figure catalog, anime collectibles" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="canonical" href="https://figurecollecting.com/" />
@@ -28,7 +29,33 @@
     <meta name="twitter:description" content="Your personal figure collection catalog. Sync with MyFigureCollection, track owned, ordered, and wished figures, and organize with flexible layouts." />
     <meta name="twitter:image" content="https://figurecollecting.com/splash-bg.png" />
 
-    <title>FigureCollecting</title>
+    <!-- Google Search Console verification - replace VERIFICATION_CODE_HERE with actual code from https://search.google.com/search-console -->
+    <meta name="google-site-verification" content="VERIFICATION_CODE_HERE" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "FigureCollecting",
+      "url": "https://figurecollecting.com",
+      "description": "Your personal figure collection catalog - track, organize, and discover anime figures and statues",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "FigureCollecting",
+        "url": "https://figurecollecting.com"
+      }
+    }
+    </script>
+
+    <title>FigureCollecting - Track Your Anime Figure Collection</title>
   </head>
   <body>
     <script>
@@ -48,7 +75,14 @@
         } catch (e) {}
       })();
     </script>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="padding: 2rem; text-align: center;">
+        <h1>FigureCollecting</h1>
+        <p>Your personal anime figure collection catalog. Track, organize, and discover figures and statues from your favorite series.</p>
+        <p>Features: Collection management, MyFigureCollection sync, search and filter, price tracking, and more.</p>
+        <p><a href="/register">Create an Account</a> | <a href="/login">Sign In</a></p>
+      </div>
+    </noscript>
     <div id="root"></div>
   </body>
 </html>
