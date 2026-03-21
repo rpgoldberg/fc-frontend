@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fc-frontend
+  namespace: figurecollecting
+  labels:
+    app: fc-frontend
+    app.kubernetes.io/name: fc-frontend
+    app.kubernetes.io/part-of: figure-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fc-frontend
+  template:
+    metadata:
+      labels:
+        app: fc-frontend
+        app.kubernetes.io/name: fc-frontend
+        app.kubernetes.io/part-of: figure-collector
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fc-frontend
+          image: ghcr.io/figurecollecting/fc-frontend:develop
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+          env:
+            - name: BACKEND_HOST
+              value: fc-backend
+            - name: BACKEND_PORT
+              value: "5050"
+            - name: FRONTEND_PORT
+              value: "80"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            # nginx needs writable dirs for pid file, cache, logs, and client body temp.
+            # The Dockerfile creates these dirs owned by the nginx user, so we cannot
+            # use readOnlyRootFilesystem here without mounting many emptyDir volumes.
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3

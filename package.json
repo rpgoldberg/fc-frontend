@@ -8,6 +8,7 @@
     "@chakra-ui/utils": "^2.2.5",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@figurecollecting/fc-shared": "file:../fc-shared",
     "@simplewebauthn/browser": "^13.2.2",
     "@types/dompurify": "^3.0.5",
     "axios": "^1.13.5",
@@ -47,8 +48,14 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs"
+      "@chakra-ui/utils/context": "<rootDir>/node_modules/@chakra-ui/utils/dist/cjs/context.cjs",
+      "^axios$": "<rootDir>/node_modules/axios",
+      "^zustand$": "<rootDir>/node_modules/zustand",
+      "^zustand/middleware$": "<rootDir>/node_modules/zustand/middleware"
     },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@figurecollecting|axios)/)"
+    ],
     "testMatch": [
       "<rootDir>/src/**/*.test.{ts,tsx}",
       "<rootDir>/src/**/*.spec.{ts,tsx}"

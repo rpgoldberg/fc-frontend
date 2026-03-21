@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fc-frontend
+  namespace: figurecollecting
+  labels:
+    app: fc-frontend
+    app.kubernetes.io/name: fc-frontend
+    app.kubernetes.io/part-of: figure-collector
+spec:
+  type: ClusterIP
+  selector:
+    app: fc-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http

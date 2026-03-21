@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fc-frontend-ingress
+  namespace: figurecollecting
+  labels:
+    app: fc-frontend
+    app.kubernetes.io/name: fc-frontend
+    app.kubernetes.io/part-of: figure-collector
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: fc.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fc-frontend
+                port:
+                  number: 80

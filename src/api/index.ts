@@ -1,6 +1,57 @@
-import axios from 'axios';
+/**
+ * API Client - Desktop frontend configuration
+ *
+ * Creates the axios instance using fc-shared's createApiClient(),
+ * then exports bound API functions that match the original signatures
+ * (without the leading AxiosInstance parameter).
+ */
+import {
+  createApiClient,
+  loginUser as _loginUser,
+  registerUser as _registerUser,
+  refreshAccessToken as _refreshAccessToken,
+  logoutUser as _logoutUser,
+  logoutAllSessions as _logoutAllSessions,
+  getUserSessions as _getUserSessions,
+  getUserProfile as _getUserProfile,
+  updateUserProfile as _updateUserProfile,
+  getFigures as _getFigures,
+  getFigureById as _getFigureById,
+  createFigure as _createFigure,
+  updateFigure as _updateFigure,
+  deleteFigure as _deleteFigure,
+  searchFigures as _searchFigures,
+  filterFigures as _filterFigures,
+  getFigureStats as _getFigureStats,
+  getPublicConfig as _getPublicConfig,
+  previewBulkImport as _previewBulkImport,
+  executeBulkImport as _executeBulkImport,
+  getLists as _getLists,
+  getListById as _getListById,
+  createList as _createList,
+  updateList as _updateList,
+  deleteList as _deleteList,
+  getListsByItem as _getListsByItem,
+  addItemsToList as _addItemsToList,
+  removeItemsFromList as _removeItemsFromList,
+  syncLists as _syncLists,
+  verifyEmailToken as _verifyEmailToken,
+  resendVerificationEmail as _resendVerificationEmail,
+  forgotPasswordRequest as _forgotPasswordRequest,
+  resetPasswordRequest as _resetPasswordRequest,
+  verify2FA as _verify2FA,
+  setupTOTP as _setupTOTP,
+  verifyTOTPSetup as _verifyTOTPSetup,
+  disableTOTP as _disableTOTP,
+  regenerateBackupCodes as _regenerateBackupCodes,
+  getWebAuthnRegisterOptions as _getWebAuthnRegisterOptions,
+  verifyWebAuthnRegistration as _verifyWebAuthnRegistration,
+  getWebAuthnLoginOptions as _getWebAuthnLoginOptions,
+  verifyWebAuthnLogin as _verifyWebAuthnLogin,
+  deleteWebAuthnCredential as _deleteWebAuthnCredential,
+} from '@figurecollecting/fc-shared';
+import type { User, Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, BulkImportPreviewResponse, BulkImportExecuteResponse, MfcList, MfcListFormData, ListPrivacy } from '@figurecollecting/fc-shared';
 import { useAuthStore } from '../stores/authStore';
-import { Figure, FigureFormData, PaginatedResponse, SearchResult, StatsData, SystemConfig, User, BulkImportPreviewResponse, BulkImportExecuteResponse, MfcList, MfcListFormData, ListPrivacy } from '../types';
 import { createLogger } from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
@@ -11,274 +62,76 @@ logger.info('API_URL configured as:', API_URL);
 logger.info('Environment:', process.env.NODE_ENV);
 logger.verbose('Full REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
-// Create axios instance
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
+// Create configured axios instance using shared client factory
+const api = createApiClient({
+  baseUrl: API_URL,
+  auth: {
+    getToken: () => useAuthStore.getState().user?.token,
+    getRefreshToken: () => useAuthStore.getState().user?.refreshToken,
+    updateTokens: (token, refreshToken, tokenExpiresAt) =>
+      useAuthStore.getState().updateTokens(token, refreshToken, tokenExpiresAt),
+    recordActivity: () => useAuthStore.getState().recordActivity(),
+    logout: () => {
+      useAuthStore.getState().logout();
+      localStorage.removeItem('auth-storage');
+    },
+    onAuthFailure: () => {
+      window.location.href = '/login';
+    },
   },
 });
 
-// Track if we're currently refreshing to prevent concurrent refresh attempts
-let isRefreshing = false;
-let refreshPromise: Promise<string> | null = null;
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const { user } = useAuthStore.getState();
-  if (user?.token) {
-    config.headers.Authorization = `Bearer ${user.token}`;
-  }
-  return config;
-});
-
-// Handle response errors and token expiration
-api.interceptors.response.use(
-  (response) => {
-    // Record activity on successful API calls
-    const { recordActivity } = useAuthStore.getState();
-    recordActivity();
-
-    // Check if we got a new token in response headers
-    const newToken = response.headers['x-new-token'] || response.headers['x-access-token'];
-    if (newToken) {
-      const { updateTokens } = useAuthStore.getState();
-      const tokenExpiresAt = Date.now() + (14 * 60 * 1000);
-      updateTokens(newToken.replace('Bearer ', ''), undefined, tokenExpiresAt);
-    }
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-    const { user, logout, updateTokens } = useAuthStore.getState();
-
-    // Handle 401 Unauthorized (expired/invalid token)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't retry refresh requests themselves
-      if (originalRequest.url?.includes('/auth/refresh')) {
-        logger.warn('Refresh token invalid, logging out');
-        logout();
-        localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
-      // Try to refresh the token
-      if (user?.refreshToken) {
-        originalRequest._retry = true;
-
-        try {
-          // If already refreshing, wait for that to complete
-          if (isRefreshing && refreshPromise) {
-            const newToken = await refreshPromise;
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            return api(originalRequest);
-          }
-
-          // Start refresh
-          isRefreshing = true;
-          logger.verbose('Token expired, attempting refresh...');
-
-          refreshPromise = api.post('/auth/refresh', { refreshToken: user.refreshToken })
-            .then(response => {
-              const data = response.data.data;
-              const newToken = data.accessToken || data.token;
-              const tokenExpiresAt = Date.now() + (14 * 60 * 1000);
-
-              updateTokens(newToken, data.refreshToken, tokenExpiresAt);
-              logger.info('Token refreshed successfully');
-              return newToken;
-            });
-
-          const newToken = await refreshPromise;
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-
-        } catch (refreshError) {
-          logger.error('Token refresh failed, logging out');
-          logout();
-          localStorage.removeItem('auth-storage');
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
-          refreshPromise = null;
-        }
-      } else {
-        // No refresh token, just logout
-        logout();
-        localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-    }
-
-    // Handle 502/503/504 (backend unavailable) - log but don't redirect
-    if (!error.response && user?.token) {
-      logger.warn('Network error detected while authenticated - backend may be unavailable');
-    } else if ([502, 503, 504].includes(error.response?.status) && user?.token) {
-      logger.warn(`Backend unavailable (${error.response.status}) - user may need to re-authenticate`);
-    }
-
-    return Promise.reject(error);
-  }
-);
+// ============================================================================
+// Bound API functions - same signatures as the original local implementations
+// ============================================================================
 
 // Auth API
-export const loginUser = async (email: string, password: string): Promise<User | { requiresTwoFactor: true; sessionId: string; methods: string[] }> => {
-  logger.verbose('Attempting login to:', API_URL + '/auth/login');
-  logger.verbose('Login payload:', { email, password: '***hidden***' }); // NOSONAR '***hidden***' is a placeholder string for logging, not a real password
+export const loginUser = (email: string, password: string): Promise<User | { requiresTwoFactor: true; sessionId: string; methods: string[] }> =>
+  _loginUser(api, email, password);
 
-  const response = await api.post('/auth/login', { email, password });
-  logger.verbose('Login response received:', response.data);
+export const registerUser = (username: string, email: string, password: string): Promise<User> =>
+  _registerUser(api, username, email, password);
 
-  // Handle 2FA required response
-  if (response.data?.requiresTwoFactor) {
-    return {
-      requiresTwoFactor: true,
-      sessionId: response.data.data.sessionId,
-      methods: response.data.data.methods,
-    };
-  }
+export const refreshAccessToken = (currentRefreshToken: string): Promise<{ token: string; refreshToken?: string; tokenExpiresAt: number }> =>
+  _refreshAccessToken(api, currentRefreshToken);
 
-  const userData = response.data?.data;
+export const logoutUser = (): Promise<void> => _logoutUser(api);
 
-  // Handle missing or malformed response data
-  if (!userData) {
-    return undefined as any;  // Return undefined for missing data
-  }
+export const logoutAllSessions = (): Promise<void> => _logoutAllSessions(api);
 
-  // Map accessToken to token for frontend compatibility
-  // Calculate token expiry (default 15 min, but we refresh on activity)
-  const tokenExpiresAt = Date.now() + (14 * 60 * 1000); // 14 min (refresh before 15 min expiry)
+export const getUserSessions = (): Promise<any[]> => _getUserSessions(api);
 
-  return {
-    _id: userData._id,
-    username: userData.username,
-    email: userData.email,
-    isAdmin: userData.isAdmin,
-    token: userData.accessToken,
-    refreshToken: userData.refreshToken,
-    tokenExpiresAt,
-    emailVerified: userData.emailVerified ?? false,
-    twoFactorEnabled: userData.twoFactorEnabled ?? false,
-    webauthnCredentialCount: userData.webauthnCredentialCount ?? 0,
-  };
-};
+export const getUserProfile = (): Promise<User> => _getUserProfile(api);
 
-export const registerUser = async (username: string, email: string, password: string): Promise<User> => {
-  const response = await api.post('/auth/register', { username, email, password });
-  const userData = response.data?.data;
-
-  // Handle missing or malformed response data
-  if (!userData) {
-    return undefined as any;  // Return undefined for missing data
-  }
-
-  // Map accessToken to token for frontend compatibility
-  const tokenExpiresAt = Date.now() + (14 * 60 * 1000);
-
-  return {
-    _id: userData._id,
-    username: userData.username,
-    email: userData.email,
-    isAdmin: userData.isAdmin,
-    token: userData.accessToken,
-    refreshToken: userData.refreshToken,
-    tokenExpiresAt,
-    emailVerified: userData.emailVerified ?? false,
-    twoFactorEnabled: userData.twoFactorEnabled ?? false,
-    webauthnCredentialCount: userData.webauthnCredentialCount ?? 0,
-  };
-};
-
-export const refreshAccessToken = async (currentRefreshToken: string): Promise<{
-  token: string;
-  refreshToken?: string;
-  tokenExpiresAt: number;
-}> => {
-  const response = await api.post('/auth/refresh', { refreshToken: currentRefreshToken });
-  const data = response.data.data;
-
-  // Calculate new expiry
-  const tokenExpiresAt = Date.now() + (14 * 60 * 1000);
-
-  return {
-    token: data.accessToken || data.token,
-    refreshToken: data.refreshToken, // Backend may rotate refresh token
-    tokenExpiresAt,
-  };
-};
-
-export const logoutUser = async (): Promise<void> => {
-  await api.post('/auth/logout');
-};
-
-export const logoutAllSessions = async (): Promise<void> => {
-  await api.post('/auth/logout-all');
-};
-
-export const getUserSessions = async (): Promise<any[]> => {
-  const response = await api.get('/auth/sessions');
-  return response.data.data;
-};
-
-export const getUserProfile = async (): Promise<User> => {
-  const response = await api.get('/auth/profile');
-  return response.data.data;
-};
-
-export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
-  const response = await api.put('/auth/profile', userData);
-  return response.data.data;
-};
+export const updateUserProfile = (userData: Partial<User>): Promise<User> =>
+  _updateUserProfile(api, userData);
 
 // Figures API
-export const getFigures = async (
+export const getFigures = (
   page = 1,
   limit = 10,
   sortBy = 'activity',
   sortOrder: 'asc' | 'desc' = 'asc',
   status?: 'owned' | 'ordered' | 'wished'
-): Promise<PaginatedResponse<Figure>> => {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    sortBy,
-    sortOrder,
-  });
-  if (status) {
-    params.append('status', status);
-  }
-  const response = await api.get(`/figures?${params.toString()}`);
-  return response.data;
-};
+): Promise<PaginatedResponse<Figure>> =>
+  _getFigures(api, page, limit, sortBy, sortOrder, status);
 
-export const getFigureById = async (id: string): Promise<Figure> => {
-  const response = await api.get(`/figures/${id}`);
-  return response.data.data;
-};
+export const getFigureById = (id: string): Promise<Figure> =>
+  _getFigureById(api, id);
 
-export const createFigure = async (figureData: FigureFormData): Promise<Figure> => {
-  const response = await api.post('/figures', figureData);
-  return response.data.data;
-};
+export const createFigure = (figureData: FigureFormData): Promise<Figure> =>
+  _createFigure(api, figureData);
 
-export const updateFigure = async (id: string, figureData: FigureFormData): Promise<Figure> => {
-  const response = await api.put(`/figures/${id}`, figureData);
-  return response.data.data;
-};
+export const updateFigure = (id: string, figureData: FigureFormData): Promise<Figure> =>
+  _updateFigure(api, id, figureData);
 
-export const deleteFigure = async (id: string): Promise<void> => {
-  await api.delete(`/figures/${id}`);
-};
+export const deleteFigure = (id: string): Promise<void> =>
+  _deleteFigure(api, id);
 
-export const searchFigures = async (query: string): Promise<SearchResult[]> => {
-  const response = await api.get(`/figures/search?query=${encodeURIComponent(query)}`);
-  return response.data.data;
-};
+export const searchFigures = (query: string): Promise<SearchResult[]> =>
+  _searchFigures(api, query);
 
-export const filterFigures = async (
+export const filterFigures = (
   params: {
     manufacturer?: string;
     distributor?: string;
@@ -291,173 +144,94 @@ export const filterFigures = async (
     sortOrder?: 'asc' | 'desc';
     status?: 'owned' | 'ordered' | 'wished';
   }
-): Promise<PaginatedResponse<Figure>> => {
-  const queryString = Object.entries(params)
-    .filter(([_, value]) => value !== undefined)
-    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
-    .join('&');
+): Promise<PaginatedResponse<Figure>> =>
+  _filterFigures(api, params);
 
-  const response = await api.get(`/figures/filter?${queryString}`);
-  return response.data;
-};
+export const getFigureStats = (status?: 'owned' | 'ordered' | 'wished'): Promise<StatsData> =>
+  _getFigureStats(api, status);
 
-export const getFigureStats = async (status?: 'owned' | 'ordered' | 'wished'): Promise<StatsData> => {
-  const params = status ? { status } : {};
-  const response = await api.get('/figures/stats', { params });
-  return response.data.data;
-};
-
-// Public Config API (no auth required)
-export const getPublicConfig = async (key: string): Promise<SystemConfig | null> => {
-  try {
-    const response = await api.get(`/config/${key}`);
-    return response.data.data;
-  } catch (error) {
-    // Return null if config not found (404) or any other error
-    logger.warn(`Failed to fetch public config '${key}':`, error);
-    return null;
-  }
-};
+// Public Config API
+export const getPublicConfig = (key: string): Promise<SystemConfig | null> =>
+  _getPublicConfig(api, key);
 
 // Bulk Import API
-export const previewBulkImport = async (csvContent: string): Promise<BulkImportPreviewResponse> => {
-  const response = await api.post('/figures/bulk-import/preview', { csvContent });
-  return response.data;
-};
+export const previewBulkImport = (csvContent: string): Promise<BulkImportPreviewResponse> =>
+  _previewBulkImport(api, csvContent);
 
-export const executeBulkImport = async (csvContent: string, skipDuplicates = true): Promise<BulkImportExecuteResponse> => {
-  const response = await api.post('/figures/bulk-import', { csvContent, skipDuplicates });
-  return response.data;
-};
+export const executeBulkImport = (csvContent: string, skipDuplicates = true): Promise<BulkImportExecuteResponse> =>
+  _executeBulkImport(api, csvContent, skipDuplicates);
 
 // Lists API
-export const getLists = async (params?: {
+export const getLists = (params?: {
   page?: number;
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   privacy?: ListPrivacy;
-}): Promise<PaginatedResponse<MfcList>> => {
-  const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.set('page', params.page.toString());
-  if (params?.limit) queryParams.set('limit', params.limit.toString());
-  if (params?.sortBy) queryParams.set('sortBy', params.sortBy);
-  if (params?.sortOrder) queryParams.set('sortOrder', params.sortOrder);
-  if (params?.privacy) queryParams.set('privacy', params.privacy);
+}): Promise<PaginatedResponse<MfcList>> =>
+  _getLists(api, params);
 
-  const query = queryParams.toString();
-  const response = await api.get(`/lists${query ? `?${query}` : ''}`);
-  return response.data;
-};
+export const getListById = (id: string): Promise<MfcList> =>
+  _getListById(api, id);
 
-export const getListById = async (id: string): Promise<MfcList> => {
-  const response = await api.get(`/lists/${id}`);
-  return response.data.data;
-};
+export const createList = (data: MfcListFormData): Promise<MfcList> =>
+  _createList(api, data);
 
-export const createList = async (data: MfcListFormData): Promise<MfcList> => {
-  const response = await api.post('/lists', data);
-  return response.data.data;
-};
+export const updateList = (id: string, data: Partial<MfcListFormData>): Promise<MfcList> =>
+  _updateList(api, id, data);
 
-export const updateList = async (id: string, data: Partial<MfcListFormData>): Promise<MfcList> => {
-  const response = await api.put(`/lists/${id}`, data);
-  return response.data.data;
-};
+export const deleteList = (id: string): Promise<void> =>
+  _deleteList(api, id);
 
-export const deleteList = async (id: string): Promise<void> => {
-  await api.delete(`/lists/${id}`);
-};
+export const getListsByItem = (mfcId: number): Promise<{ _id: string; name: string }[]> =>
+  _getListsByItem(api, mfcId);
 
-export const getListsByItem = async (mfcId: number): Promise<{ _id: string; name: string }[]> => {
-  const response = await api.get(`/lists/by-item/${mfcId}`);
-  return response.data.data;
-};
+export const addItemsToList = (listId: string, mfcIds: number[]): Promise<MfcList> =>
+  _addItemsToList(api, listId, mfcIds);
 
-export const addItemsToList = async (listId: string, mfcIds: number[]): Promise<MfcList> => {
-  const response = await api.post(`/lists/${listId}/items`, { mfcIds });
-  return response.data.data;
-};
+export const removeItemsFromList = (listId: string, mfcIds: number[]): Promise<MfcList> =>
+  _removeItemsFromList(api, listId, mfcIds);
 
-export const removeItemsFromList = async (listId: string, mfcIds: number[]): Promise<MfcList> => {
-  const response = await api.delete(`/lists/${listId}/items`, { data: { mfcIds } });
-  return response.data.data;
-};
-
-export const syncLists = async (lists: MfcListFormData[]): Promise<{ upserted: number }> => {
-  const response = await api.post('/lists/sync', { lists });
-  return response.data.data;
-};
+export const syncLists = (lists: MfcListFormData[]): Promise<{ upserted: number }> =>
+  _syncLists(api, lists);
 
 // Email Verification
-export const verifyEmailToken = async (token: string, userId: string) => {
-  const { data } = await api.post('/auth/verify-email', { token, userId });
-  return data;
-};
+export const verifyEmailToken = (token: string, userId: string) =>
+  _verifyEmailToken(api, token, userId);
 
-export const resendVerificationEmail = async (email: string) => {
-  const { data } = await api.post('/auth/resend-verification', { email });
-  return data;
-};
+export const resendVerificationEmail = (email: string) =>
+  _resendVerificationEmail(api, email);
 
-export const forgotPasswordRequest = async (email: string) => {
-  const { data } = await api.post('/auth/forgot-password', { email });
-  return data;
-};
+export const forgotPasswordRequest = (email: string) =>
+  _forgotPasswordRequest(api, email);
 
-export const resetPasswordRequest = async (token: string, password: string, userId: string) => {
-  const { data } = await api.post('/auth/reset-password', { token, password, userId });
-  return data;
-};
+export const resetPasswordRequest = (token: string, password: string, userId: string) =>
+  _resetPasswordRequest(api, token, password, userId);
 
 // Two-Factor
-export const verify2FA = async (sessionId: string, method: string, code: string) => {
-  const { data } = await api.post('/auth/2fa/verify', { sessionId, method, code });
-  return data;
-};
+export const verify2FA = (sessionId: string, method: string, code: string) =>
+  _verify2FA(api, sessionId, method, code);
 
-export const setupTOTP = async () => {
-  const { data } = await api.post('/auth/2fa/totp/setup');
-  return data;
-};
+export const setupTOTP = () => _setupTOTP(api);
 
-export const verifyTOTPSetup = async (code: string) => {
-  const { data } = await api.post('/auth/2fa/totp/verify-setup', { code });
-  return data;
-};
+export const verifyTOTPSetup = (code: string) => _verifyTOTPSetup(api, code);
 
-export const disableTOTP = async (code: string) => {
-  const { data } = await api.delete('/auth/2fa/totp', { data: { code } });
-  return data;
-};
+export const disableTOTP = (code: string) => _disableTOTP(api, code);
 
-export const regenerateBackupCodes = async (code: string) => {
-  const { data } = await api.post('/auth/2fa/backup-codes', { code });
-  return data;
-};
+export const regenerateBackupCodes = (code: string) => _regenerateBackupCodes(api, code);
 
 // WebAuthn
-export const getWebAuthnRegisterOptions = async (nickname?: string) => {
-  const { data } = await api.post('/auth/webauthn/register/options', { nickname });
-  return data;
-};
+export const getWebAuthnRegisterOptions = (nickname?: string) =>
+  _getWebAuthnRegisterOptions(api, nickname);
 
-export const verifyWebAuthnRegistration = async (challengeId: string, response: any) => {
-  const { data } = await api.post('/auth/webauthn/register/verify', { challengeId, response });
-  return data;
-};
+export const verifyWebAuthnRegistration = (challengeId: string, response: any) =>
+  _verifyWebAuthnRegistration(api, challengeId, response);
 
-export const getWebAuthnLoginOptions = async (email?: string) => {
-  const { data } = await api.post('/auth/webauthn/login/options', { email });
-  return data;
-};
+export const getWebAuthnLoginOptions = (email?: string) =>
+  _getWebAuthnLoginOptions(api, email);
 
-export const verifyWebAuthnLogin = async (challengeId: string, response: any) => {
-  const { data } = await api.post('/auth/webauthn/login/verify', { challengeId, response });
-  return data;
-};
+export const verifyWebAuthnLogin = (challengeId: string, response: any) =>
+  _verifyWebAuthnLogin(api, challengeId, response);
 
-export const deleteWebAuthnCredential = async (credentialId: string) => {
-  const { data } = await api.delete(`/auth/webauthn/credential/${credentialId}`);
-  return data;
-};
+export const deleteWebAuthnCredential = (credentialId: string) =>
+  _deleteWebAuthnCredential(api, credentialId);
