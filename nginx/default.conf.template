@@ -10,9 +10,17 @@ server {
 
     # Prevent internal port from leaking into redirects (e.g. /login → /login/)
     absolute_redirect off;
-    
+
     access_log off;
-    
+
+    # Security headers
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://figurecollecting.com;" always;
+
     # Cache bust for HTML files - always fetch latest
     location ~* \.html$ {
         expires -1;
