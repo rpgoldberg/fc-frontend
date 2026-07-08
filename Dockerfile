@@ -133,15 +133,6 @@ RUN apt-get update && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install Node.js for health check
-RUN NODE_VERSION=v24.16.0 \
-    && curl -fsSLO https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.xz \
-    && tar -xJf node-${NODE_VERSION}-linux-x64.tar.xz -C /usr/local --strip-components=1 \
-    && rm node-${NODE_VERSION}-linux-x64.tar.xz
-
-# Upgrade npm to latest to fix bundled dependency vulnerabilities (tar, brace-expansion)
-RUN npm install -g npm@latest && npm cache clean --force
-
 # Create nginx user and set up directories
 RUN useradd --system --no-create-home --shell /bin/false nginx \
     && mkdir -p /var/cache/nginx /var/log/nginx /etc/nginx/templates /etc/nginx/conf.d \
@@ -182,9 +173,10 @@ ENV FRONTEND_PORT=5051
 
 EXPOSE 80
 
-# Health check using Node.js with explicit timeout handling
+# Health check via curl (installed above) against the served port's /health
+# endpoint. Replaces a Node.js runtime that was installed solely for this check.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "const req = require('http').get('http://localhost:80', { timeout: 5000 }, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('timeout', () => { req.destroy(); process.exit(1); }); req.on('error', () => process.exit(1));"
+  CMD curl -fsS --max-time 5 "http://localhost:${FRONTEND_PORT}/health" || exit 1
 
 # Use custom startup script for template substitution
 CMD ["/usr/local/bin/start-nginx.sh"]
